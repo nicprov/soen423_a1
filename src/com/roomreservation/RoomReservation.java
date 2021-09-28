@@ -5,10 +5,20 @@ import java.rmi.server.UnicastRemoteObject;
 import java.sql.Timestamp;
 import java.util.Date;
 
-public class RoomReservationStudent extends UnicastRemoteObject implements RoomReservationStudentInterface {
+public class RoomReservation extends UnicastRemoteObject implements RoomReservationInterface {
 
-    protected RoomReservationStudent() throws RemoteException {
+    protected RoomReservation() throws RemoteException {
         super();
+    }
+
+    @Override
+    public String createRoom(int roomNumber, Date date, Timestamp[] listOfTimeSlots) throws RemoteException {
+        return "createRoom";
+    }
+
+    @Override
+    public String deleteRoom(int roomNumber, Date date, Timestamp[] listOfTimeSlots) throws RemoteException {
+        return "deleteRoom";
     }
 
     @Override
