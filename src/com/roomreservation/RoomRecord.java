@@ -1,11 +1,12 @@
 package com.roomreservation;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 public class RoomRecord {
     private Date date;
     private int roomNumber;
-    private int[] availableTimes;
+    private Timestamp[] availableTimes;
     private String bookedBy;
 
     public Date getDate() {
@@ -24,11 +25,11 @@ public class RoomRecord {
         this.roomNumber = roomNumber;
     }
 
-    public int[] getAvailableTimes() {
+    public Timestamp[] getAvailableTimes() {
         return availableTimes;
     }
 
-    public void setAvailableTimes(int[] availableTimes) {
+    public void setAvailableTimes(Timestamp[] availableTimes) {
         this.availableTimes = availableTimes;
     }
 
