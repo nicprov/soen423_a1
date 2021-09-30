@@ -13,9 +13,6 @@ import static com.roomreservation.CampusInformation.*;
 
 public class Client {
 
-    public static final int adminServerPort = 5000;
-    public static final int studentServerPort = 6000;
-
     public static void main(String[] args) {
         InputStreamReader is = new InputStreamReader(System.in);
         BufferedReader bufferedReader = new BufferedReader(is);
@@ -25,13 +22,13 @@ public class Client {
             String identifierType = getIdentifierType(identifier);
             if (identifier.toLowerCase().startsWith("dvl")){
                 // Connect to Dorval-Campus (DVL)
-                registryURL = "rmi://" + host + ":" + dvlPort + "/server";
+                registryURL = "rmi://" + host + ":" + dvlRMIPort + "/server";
             } else if (identifier.toLowerCase().startsWith("kkl")) {
                 // Connect to Kirkland-Campus (KKL)
-                registryURL = "rmi://" + host + ":" + kklPort + "/server";
+                registryURL = "rmi://" + host + ":" + kklRMIPort + "/server";
             } else {
                 // Connect to Westmount-Campus (WST)
-                registryURL = "rmi://" + host + ":" + wstPort + "/server";
+                registryURL = "rmi://" + host + ":" + wstRMIPort + "/server";
             }
             System.out.println("Lookup completed");
             RoomReservationInterface roomReservation = (RoomReservationInterface) Naming.lookup(registryURL);

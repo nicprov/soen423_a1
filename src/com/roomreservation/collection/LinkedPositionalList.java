@@ -58,6 +58,13 @@ public class LinkedPositionalList<E> implements PositionalList<E> {
         header.setNext(trailer);                    // header is followed by trailer
     }
 
+    public LinkedPositionalList(E e) {
+        header = new Node<>(null, null, null);      // create header
+        trailer = new Node<>(null, header, null);   // trailer is preceded by header
+        header.setNext(trailer);                    // header is followed by trailer
+        addBetween(e, header, header.getNext());
+    }
+
     private Node<E> validate(Position<E> p) throws IllegalArgumentException {
         if (!(p instanceof Node)) throw new IllegalArgumentException("Invalid p");
         Node<E> node = (Node<E>) p;     // safe cast
