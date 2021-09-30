@@ -4,10 +4,19 @@ import java.sql.Timestamp;
 import java.util.Date;
 
 public class RoomRecord {
+    private String recordId;
     private Date date;
     private int roomNumber;
     private Timestamp[] availableTimes;
     private String bookedBy;
+
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(String recordId) {
+        this.recordId = recordId;
+    }
 
     public Date getDate() {
         return date;
