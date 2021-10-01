@@ -11,7 +11,7 @@ public interface RoomReservationInterface extends Remote {
     String deleteRoom(int roomNumber, Date date, ArrayList<String> listOfTimeSlots) throws java.rmi.RemoteException;
 
     /* Student role */
-    String bookRoom(String campusName, int roomNumber, Date date, Timestamp timeslot) throws java.rmi.RemoteException;
+    String bookRoom(String identifier, Campus campusName, int roomNumber, Date date, String timeslot) throws java.rmi.RemoteException;
     String getAvailableTimeSlot(Date date) throws java.rmi.RemoteException;
-    String cancelBooking(int bookingId) throws java.rmi.RemoteException;
+    String cancelBooking(String bookingId) throws java.rmi.RemoteException;
 }

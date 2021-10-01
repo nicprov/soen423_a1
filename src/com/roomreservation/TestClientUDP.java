@@ -19,8 +19,7 @@ public class TestClientUDP {
 
             UdpRequest.Builder udpRequest = UdpRequest.newBuilder();
             udpRequest.setAction(UdpRequestActions.GetAvailableTimeslots.toString());
-            udpRequest.setBookingId(123);
-            udpRequest.setRoomNumber(1231412341);
+
             byte[] m = udpRequest.build().toByteArray();
 
             InetAddress host = InetAddress.getLocalHost();
@@ -30,9 +29,8 @@ public class TestClientUDP {
 
             byte[] buffer = new byte[1000];
             DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
-            System.out.println("test");
             datagramSocket.receive(reply);
-            
+
             System.out.println("Action: " + UdpRequest.parseFrom(trim(reply.getData())).getAction());
             System.out.println("Booking ID:" + UdpRequest.parseFrom(trim(reply.getData())).getBookingId());
             System.out.println("Room number: " + UdpRequest.parseFrom(trim(reply.getData())).getRoomNumber());
