@@ -4,15 +4,16 @@ import com.roomreservation.protobuf.protos.RequestObject;
 import com.roomreservation.protobuf.protos.RequestObjectActions;
 import com.roomreservation.protobuf.protos.ResponseObject;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class RMIResponse {
+public class RMIResponse implements Serializable {
     private String message;
     private Date datetime;
-    private RequestObjectActions requestType;
+    private String requestType;
     private String requestParameters;
     private boolean status;
 
@@ -34,11 +35,11 @@ public class RMIResponse {
         this.datetime = datetime;
     }
 
-    public RequestObjectActions getRequestType() {
+    public String getRequestType() {
         return requestType;
     }
 
-    public void setRequestType(RequestObjectActions requestType) {
+    public void setRequestType(String requestType) {
         this.requestType = requestType;
     }
 
@@ -50,10 +51,6 @@ public class RMIResponse {
         this.requestParameters = requestParameters;
     }
 
-    public boolean isStatus() {
-        return status;
-    }
-
     public void setStatus(boolean status) {
         this.status = status;
     }
@@ -63,7 +60,7 @@ public class RMIResponse {
         RMIResponse rmiResponse = new RMIResponse();
         rmiResponse.setMessage(responseObject.getMessage());
         rmiResponse.setDatetime(dateTimeFormat.parse(responseObject.getDateTime()));
-        rmiResponse.setRequestType(RequestObjectActions.valueOf(responseObject.getRequestType()));
+        rmiResponse.setRequestType(responseObject.getRequestType());
         rmiResponse.setRequestParameters(responseObject.getRequestParameters());
         rmiResponse.setStatus(responseObject.getStatus());
         return rmiResponse;

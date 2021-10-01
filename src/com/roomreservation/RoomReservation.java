@@ -32,14 +32,14 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         super();
         this.database = new LinkedPositionalList<>();
         this.campus = campus;
-        this.dateTimeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        this.dateTimeFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     }
 
     @Override
     public RMIResponse createRoom(int roomNumber, Date date, ArrayList<String> listOfTimeSlots) throws RemoteException {
         // Check whether an entry exist on date
         RMIResponse rmiResponse = new RMIResponse();
-        String message = "Date (" + date.toString() + ") entry has been created";
+        String message = "Room Entry (" + roomNumber + ") has been created";
         boolean status = true;
 
         boolean dateExist = false;
@@ -75,6 +75,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                                     // Timeslot already exist
                                     timeslotExist = true;
                                     status = false;
+                                    message = "Timeslot (" + timeslot + ") already exist";
                                 }
                             }
                             // Add timeslot
@@ -108,7 +109,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         }
         rmiResponse.setMessage(message);
         rmiResponse.setDatetime(new Date());
-        rmiResponse.setRequestType(RequestObjectActions.CreateRoom);
+        rmiResponse.setRequestType(RequestObjectActions.CreateRoom.toString());
         rmiResponse.setRequestParameters("Room number: " + roomNumber + ", Date: " + date.toString() + ", List of Timeslots: " + listOfTimeSlots.toString());
         rmiResponse.setStatus(status);
         return rmiResponse;
@@ -185,7 +186,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         }
         rmiResponse.setMessage(message);
         rmiResponse.setDatetime(new Date());
-        rmiResponse.setRequestType(RequestObjectActions.DeleteRoom);
+        rmiResponse.setRequestType(RequestObjectActions.DeleteRoom.toString());
         rmiResponse.setRequestParameters("Room number: " + roomNumber + ", Date: " + date.toString() + ", List of Timeslots: " + listOfTimeSlots.toString());
         rmiResponse.setStatus(status);
         return rmiResponse;
@@ -212,7 +213,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         // Build new proto request object
         RequestObject.Builder requestObject = RequestObject.newBuilder();
         requestObject.setAction(RequestObjectActions.GetAvailableTimeslots.toString());
-        requestObject.setDate(date.toString());
+        requestObject.setDate(dateTimeFormat.format(date));
 
         // Get response object
         RMIResponse dvlTimeslots = udpTransfer(Campus.DVL, requestObject.build());
@@ -221,8 +222,8 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         RMIResponse rmiResponse = new RMIResponse();
         rmiResponse.setMessage("DVL " + dvlTimeslots.getMessage() + ", KKL " + kklTimeslots.getMessage() + ", WST " + wstTimeslots.getMessage());
         rmiResponse.setDatetime(new Date());
-        rmiResponse.setRequestType(RequestObjectActions.GetAvailableTimeslots);
-        rmiResponse.setRequestParameters("Date: " + date.toString());
+        rmiResponse.setRequestType(RequestObjectActions.GetAvailableTimeslots.toString());
+        rmiResponse.setRequestParameters("Date: " + dateTimeFormat.format(date));
         rmiResponse.setStatus(true);
         return rmiResponse;
     }
@@ -273,9 +274,43 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             message = "Booking (" + bookingId + ") does not exist";
         rmiResponse.setMessage(message);
         rmiResponse.setDatetime(new Date());
-        rmiResponse.setRequestType(RequestObjectActions.CancelBooking);
+        rmiResponse.setRequestType(RequestObjectActions.CancelBooking.toString());
         rmiResponse.setRequestParameters("Booking Id: " + bookingId);
         rmiResponse.setStatus(status);
+        return rmiResponse;
+    }
+
+    public RMIResponse getAvailableTimeSlotOnCampus(Date date){
+        RMIResponse rmiResponse = new RMIResponse();
+        int counter = 0;
+        Iterator<Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>>> dateIterator = database.positions().iterator();
+        while (dateIterator.hasNext()){
+            Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> dateNext = dateIterator.next();
+
+            // Check if Date exist
+            if (dateNext.getElement().getKey().equals(date)){
+                Iterator<Position<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>> roomIterator = dateNext.getElement().getValue().positions().iterator();
+
+                Position<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>> roomNext = null;
+
+                while (roomIterator.hasNext()){
+                    roomNext = roomIterator.next();
+
+                    Iterator<Position<Entry<String, LinkedPositionalList<Entry<String, String>>>>> timeslotIterator = roomNext.getElement().getValue().positions().iterator();
+                    while (timeslotIterator.hasNext()) {
+                        Position<Entry<String, LinkedPositionalList<Entry<String, String>>>> timeslotNext = timeslotIterator.next();
+
+                        if (timeslotNext.getElement().getValue() == null)
+                            counter++;
+                    }
+                }
+            }
+        }
+        rmiResponse.setMessage(Integer.toString(counter));
+        rmiResponse.setDatetime(new Date());
+        rmiResponse.setRequestType(RequestObjectActions.GetAvailableTimeslots.toString());
+        rmiResponse.setRequestParameters("Date: " + dateTimeFormat.format(date));
+        rmiResponse.setStatus(true);
         return rmiResponse;
     }
 
@@ -283,8 +318,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         // Check whether an entry exist on date
         RMIResponse rmiResponse = new RMIResponse();
         boolean status = false;
-        String message = "Timeslot (" + timeslot + ") has been booked";
-
+        String message = "";
         boolean dateExist = false;
         Iterator<Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>>> dateIterator = database.positions().iterator();
         while (dateIterator.hasNext()){
@@ -318,9 +352,11 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                                 // Check if timeslot already has a booking
                                 if (timeslotNext.getElement().getValue() == null){
                                     // Create timeslot and add attributes
+                                    String bookingId = UUID.randomUUID().toString();
                                     roomNext.getElement().getValue().set(timeslotNext, new Node<>(timeslot, new LinkedPositionalList<>()));
-                                    timeslotNext.getElement().getValue().addFirst(new Node<>("bookingId", UUID.randomUUID().toString()));
+                                    timeslotNext.getElement().getValue().addFirst(new Node<>("bookingId", bookingId));
                                     timeslotNext.getElement().getValue().addFirst(new Node<>("studentId", identifier));
+                                    message = "Timeslot (" + timeslot + ") has been booked, booking ID: " + bookingId;
                                     status = true;
                                 } else {
                                     // Already booked
@@ -346,7 +382,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         }
         rmiResponse.setMessage(message);
         rmiResponse.setDatetime(new Date());
-        rmiResponse.setRequestType(RequestObjectActions.BookRoom);
+        rmiResponse.setRequestType(RequestObjectActions.BookRoom.toString());
         rmiResponse.setRequestParameters("Identifier: " + identifier + ", Room Number: " + roomNumber + ", Date: " + date.toString() + ", Timeslot: " + timeslot);
         rmiResponse.setStatus(status);
         return rmiResponse;

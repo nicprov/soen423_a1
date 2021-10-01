@@ -104,7 +104,7 @@ public class Server {
 
                 switch (RequestObjectActions.valueOf(requestObject.getAction())){
                     case GetAvailableTimeslots:
-                        responseObject = new RMIResponse().toResponseObject(roomReservation.getAvailableTimeSlot(dateFormat.parse(requestObject.getDate())));
+                        responseObject = new RMIResponse().toResponseObject(roomReservation.getAvailableTimeSlotOnCampus(dateFormat.parse(requestObject.getDate())));
                         break;
                     case BookRoom:
                         responseObject = new RMIResponse().toResponseObject(roomReservation.bookRoom(requestObject.getIdentifier(), Campus.valueOf(requestObject.getCampusName()), requestObject.getRoomNumber(), dateFormat.parse(requestObject.getDate()), requestObject.getTimeslot()));
@@ -141,7 +141,6 @@ public class Server {
                         responseObject = tempObject.build();
                         break;
                 }
-
                 // Encode response object
                 byte[] response = responseObject.toByteArray();
                 DatagramPacket reply = new DatagramPacket(response, response.length, request.getAddress(), request.getPort());
