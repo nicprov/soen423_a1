@@ -1,7 +1,8 @@
 package com.roomreservation;
 
-import com.roomreservation.protobuf.protos.UdpRequest;
-import com.roomreservation.protobuf.protos.UdpResponse;
+import com.roomreservation.protobuf.protos.RequestObject;
+import com.roomreservation.protobuf.protos.RequestObjectActions;
+import com.roomreservation.protobuf.protos.ResponseObject;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -11,16 +12,19 @@ import java.net.SocketException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.roomreservation.ConsoleColours.*;
 import static com.roomreservation.CampusInformation.*;
-import static com.roomreservation.protobuf.protos.UdpRequestActions.BookRoom;
-import static com.roomreservation.protobuf.protos.UdpRequestActions.GetAvailableTimeslots;
 
 public class Server {
+
+    private static RoomReservation roomReservation;
 
     public static void main(String[] args) {
         try {
@@ -41,7 +45,6 @@ public class Server {
 
     private static void startRMIServer(Campus campus) throws RemoteException, MalformedURLException {
         String registryURL;
-        RoomReservation roomReservation;
         switch (campus){
             case DVL:
                 roomReservation = new RoomReservation(campus);
@@ -89,15 +92,59 @@ public class Server {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 datagramSocket.receive(request);
 
-                // Decode udpRequest object
-                UdpRequest udpRequest = UdpRequest.parseFrom(trim(request.getData()));
+                // Decode request object
+                RequestObject requestObject = RequestObject.parseFrom(trim(request.getData()));
 
+                // Build response object
+                ResponseObject responseObject;
+                ResponseObject.Builder tempObject;
 
                 // Perform action
-                UdpResponse.Builder udpResponse = UdpResponse.newBuilder();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
 
-                // Encode udpResponse object
-                DatagramPacket reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(), request.getPort());
+                switch (RequestObjectActions.valueOf(requestObject.getAction())){
+                    case GetAvailableTimeslots:
+                        responseObject = new RMIResponse().toResponseObject(roomReservation.getAvailableTimeSlot(dateFormat.parse(requestObject.getDate())));
+                        break;
+                    case BookRoom:
+                        responseObject = new RMIResponse().toResponseObject(roomReservation.bookRoom(requestObject.getIdentifier(), Campus.valueOf(requestObject.getCampusName()), requestObject.getRoomNumber(), dateFormat.parse(requestObject.getDate()), requestObject.getTimeslot()));
+                        break;
+                    case CancelBooking:
+                        responseObject = new RMIResponse().toResponseObject(roomReservation.cancelBooking(requestObject.getBookingId()));
+                        break;
+                    case IncreaseBookingCount:
+                        tempObject = ResponseObject.newBuilder();
+                        tempObject.setMessage("Increase Booking Count not supported through UDP");
+                        tempObject.setDateTime(roomReservation.dateTimeFormat.format(new Date()));
+                        tempObject.setRequestType(RequestObjectActions.IncreaseBookingCount.toString());
+                        tempObject.setRequestParameters("None");
+                        tempObject.setStatus(false);
+                        responseObject = tempObject.build();
+                        break;
+                    case CreateRoom:
+                        tempObject = ResponseObject.newBuilder();
+                        tempObject.setMessage("Create Room not supported through UDP");
+                        tempObject.setDateTime(roomReservation.dateTimeFormat.format(new Date()));
+                        tempObject.setRequestType(RequestObjectActions.CreateRoom.toString());
+                        tempObject.setRequestParameters("None");
+                        tempObject.setStatus(false);
+                        responseObject = tempObject.build();
+                        break;
+                    case DeleteRoom:
+                    default:
+                        tempObject = ResponseObject.newBuilder();
+                        tempObject.setMessage("Delete Room not supported through UDP");
+                        tempObject.setDateTime(roomReservation.dateTimeFormat.format(new Date()));
+                        tempObject.setRequestType(RequestObjectActions.DeleteRoom.toString());
+                        tempObject.setRequestParameters("None");
+                        tempObject.setStatus(false);
+                        responseObject = tempObject.build();
+                        break;
+                }
+
+                // Encode response object
+                byte[] response = responseObject.toByteArray();
+                DatagramPacket reply = new DatagramPacket(response, response.length, request.getAddress(), request.getPort());
                 datagramSocket.send(reply);
             }
         }

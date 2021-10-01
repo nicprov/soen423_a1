@@ -1,8 +1,8 @@
 package com.roomreservation;
 
-import com.google.protobuf.ByteString;
-import com.roomreservation.protobuf.protos.UdpRequest;
-import com.roomreservation.protobuf.protos.UdpRequestActions;
+import com.roomreservation.protobuf.protos.RequestObject;
+import com.roomreservation.protobuf.protos.RequestObjectActions;
+import com.roomreservation.protobuf.protos.ResponseObject;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -17,10 +17,10 @@ public class TestClientUDP {
         try {
             datagramSocket = new DatagramSocket();
 
-            UdpRequest.Builder udpRequest = UdpRequest.newBuilder();
-            udpRequest.setAction(UdpRequestActions.GetAvailableTimeslots.toString());
+            RequestObject.Builder requestObject = RequestObject.newBuilder();
+            requestObject.setAction(RequestObjectActions.GetAvailableTimeslots.toString());
 
-            byte[] m = udpRequest.build().toByteArray();
+            byte[] m = requestObject.build().toByteArray();
 
             InetAddress host = InetAddress.getLocalHost();
 
@@ -31,9 +31,7 @@ public class TestClientUDP {
             DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
             datagramSocket.receive(reply);
 
-            System.out.println("Action: " + UdpRequest.parseFrom(trim(reply.getData())).getAction());
-            System.out.println("Booking ID:" + UdpRequest.parseFrom(trim(reply.getData())).getBookingId());
-            System.out.println("Room number: " + UdpRequest.parseFrom(trim(reply.getData())).getRoomNumber());
+            System.out.println("Message: " + ResponseObject.parseFrom(trim(reply.getData())));
         }
         catch (SocketException e){
             System.out.println("Socket: " + e.getMessage());
