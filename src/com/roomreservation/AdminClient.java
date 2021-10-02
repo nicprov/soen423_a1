@@ -6,8 +6,10 @@ import com.roomreservation.common.RMIResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.rmi.ConnectException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,12 +21,12 @@ import static com.roomreservation.common.ConsoleColours.*;
 
 public class AdminClient {
     private static String identifier;
+    private static String registryURL;
 
     public static void main(String[] args) {
         InputStreamReader is = new InputStreamReader(System.in);
         BufferedReader bufferedReader = new BufferedReader(is);
         try {
-            String registryURL;
             identifier = getIdentifier(bufferedReader);
             if (identifier.toLowerCase().startsWith("dvl")){
                 // Connect to Dorval-Campus (DVL)
@@ -40,9 +42,9 @@ public class AdminClient {
             RoomReservationInterface roomReservation = (RoomReservationInterface) Naming.lookup(registryURL);
             startAdmin(roomReservation, bufferedReader);
         } catch (ConnectException e) {
-            System.out.println("Unable to connect to remote server, host may be down. Please try again later!");
+            System.out.println(ANSI_RED + "Unable to connect to remote server, host may be down. Please try again later!" + RESET);
         } catch (Exception e){
-            System.out.println("Unable to start client: " + e);
+            System.out.println(ANSI_RED + "Unable to start client: " + e.getMessage() + RESET);
         }
     }
 
@@ -95,7 +97,7 @@ public class AdminClient {
      * @param bufferedReader
      * @throws IOException
      */
-    private static void startAdmin(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws IOException {
+    private static void startAdmin(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws IOException, NotBoundException, InterruptedException {
         while (true) {
             String action = listAndGetActions(bufferedReader);
             switch (action){
@@ -114,8 +116,7 @@ public class AdminClient {
         }
     }
 
-    private static void createRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws RemoteException {
-
+    private static void createRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws RemoteException, MalformedURLException, NotBoundException, InterruptedException {
         System.out.println("\nCREATE ROOM");
         System.out.println("-----------");
         try {
@@ -125,12 +126,17 @@ public class AdminClient {
                 System.out.println(ANSI_GREEN + response.getMessage() + RESET);
             else
                 System.out.println(ANSI_RED + response.getMessage() + RESET);
+        } catch (ConnectException e){
+            System.out.println(ANSI_RED + "Unable to connect to remote server, retrying..." + RESET);
+            Thread.sleep(1000);
+            roomReservation = (RoomReservationInterface) Naming.lookup(registryURL);
+            createRoom(roomReservation, bufferedReader);
         } catch (IOException e) {
-            System.out.println(ANSI_RED + "Exception: " + e.getMessage());
+            System.out.println(ANSI_RED + "Exception: " + e.getMessage() + RESET);
         }
     }
 
-    private static void deleteRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws RemoteException {
+    private static void deleteRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws RemoteException, InterruptedException, MalformedURLException, NotBoundException {
         System.out.println("\nDELETE ROOM");
         System.out.println("-----------");
         try {
@@ -140,8 +146,13 @@ public class AdminClient {
                 System.out.println(ANSI_GREEN + response.getMessage() + RESET);
             else
                 System.out.println(ANSI_RED + response.getMessage() + RESET);
+        } catch (ConnectException e){
+            System.out.println(ANSI_RED + "Unable to connect to remote server, retrying..." + RESET);
+            Thread.sleep(1000);
+            roomReservation = (RoomReservationInterface) Naming.lookup(registryURL);
+            deleteRoom(roomReservation, bufferedReader);
         } catch (IOException e) {
-            System.out.println(ANSI_RED + "Exception: " + e.getMessage());
+            System.out.println(ANSI_RED + "Exception: " + e.getMessage() + RESET);
         }
     }
 }

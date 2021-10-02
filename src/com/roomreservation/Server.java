@@ -102,7 +102,7 @@ public class Server {
                 ResponseObject.Builder tempObject;
 
                 // Perform action
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
                 switch (RequestObjectActions.valueOf(requestObject.getAction())){
                     case GetAvailableTimeslots:

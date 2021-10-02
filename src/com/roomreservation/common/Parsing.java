@@ -24,6 +24,16 @@ public class Parsing {
         return timeslots;
     }
 
+    public static String getTimeslot(BufferedReader bufferedReader) throws IOException {
+        System.out.print("Enter a timeslots (ie. 9:30-10:00): ");
+        String timeslot = Parsing.tryParseTimeslot(bufferedReader.readLine());
+        while (timeslot == null){
+            System.out.print(ANSI_RED + "Invalid timeslot provided, must be in the following format (ie. 9:30-10:00): " + RESET);
+            timeslot = Parsing.tryParseTimeslot(bufferedReader.readLine());
+        }
+        return timeslot;
+    }
+
     public static Date getDate(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter date (ie. 2021-01-01): ");
         Date date = Parsing.tryParseDate(bufferedReader.readLine());
