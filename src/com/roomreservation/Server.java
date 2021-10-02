@@ -1,5 +1,7 @@
 package com.roomreservation;
 
+import com.roomreservation.common.Campus;
+import com.roomreservation.common.RMIResponse;
 import com.roomreservation.protobuf.protos.RequestObject;
 import com.roomreservation.protobuf.protos.RequestObjectActions;
 import com.roomreservation.protobuf.protos.ResponseObject;
@@ -19,8 +21,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.roomreservation.ConsoleColours.*;
-import static com.roomreservation.CampusInformation.*;
+import static com.roomreservation.common.ConsoleColours.*;
+import static com.roomreservation.common.CampusInformation.*;
 
 public class Server {
 

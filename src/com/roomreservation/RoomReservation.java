@@ -4,6 +4,8 @@ import com.roomreservation.collection.Entry;
 import com.roomreservation.collection.LinkedPositionalList;
 import com.roomreservation.collection.Node;
 import com.roomreservation.collection.Position;
+import com.roomreservation.common.Campus;
+import com.roomreservation.common.RMIResponse;
 import com.roomreservation.protobuf.protos.RequestObject;
 import com.roomreservation.protobuf.protos.ResponseObject;
 import com.roomreservation.protobuf.protos.RequestObjectActions;
@@ -20,7 +22,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.roomreservation.CampusInformation.*;
+import static com.roomreservation.common.CampusInformation.*;
 
 public class RoomReservation extends UnicastRemoteObject implements RoomReservationInterface {
 

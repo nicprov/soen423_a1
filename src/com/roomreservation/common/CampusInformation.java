@@ -1,4 +1,4 @@
-package com.roomreservation;
+package com.roomreservation.common;
 
 public class CampusInformation {
     public static final int dvlRMIPort = 5000;

@@ -1,9 +1,9 @@
 package com.roomreservation;
 
-import com.roomreservation.protobuf.protos.ResponseObject;
+import com.roomreservation.common.Campus;
+import com.roomreservation.common.RMIResponse;
 
 import java.rmi.Remote;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 

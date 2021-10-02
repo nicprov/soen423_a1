@@ -1,22 +1,19 @@
 package com.roomreservation;
 
+import com.roomreservation.common.Campus;
+import com.roomreservation.common.Parsing;
+import com.roomreservation.common.RMIResponse;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.rmi.ConnectException;
 import java.rmi.Naming;
-import java.rmi.RemoteException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.roomreservation.CampusInformation.*;
-import static com.roomreservation.ConsoleColours.*;
+import static com.roomreservation.common.CampusInformation.*;
+import static com.roomreservation.common.ConsoleColours.*;
 
 public class StudentClient {
     private static String identifier;
@@ -120,58 +117,17 @@ public class StudentClient {
     }
 
     private static void bookRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader){
-        Campus campusName = Campus.DVL;
-        int roomNumber = 0;
-        Date date = new Date();
-        String timeslot = "";
-
         System.out.println("\nBOOK ROOM");
         System.out.println("-----------");
-        System.out.printf("Enter campus name (dvl, kkl, wst): ");
         try {
-            switch (bufferedReader.readLine()){
-                case "dvl":
-                    campusName = Campus.DVL;
-                    break;
-                case "kkl":
-                    campusName = Campus.KKL;
-                    break;
-                case "wst":
-                default:
-                    campusName = Campus.WST;
-                    break;
-
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        System.out.printf("Enter room number  (ie. 201): ");
-        try {
-            roomNumber = Integer.parseInt(bufferedReader.readLine());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.printf("Enter date (ie. 2021-01-01): ");
-        try {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            date = dateFormat.parse(bufferedReader.readLine());
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.printf("Enter a timeslot (ie. 9:30-10:00): ");
-        try {
-            timeslot = bufferedReader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            RMIResponse response = roomReservation.bookRoom(identifier, campusName, roomNumber, date, timeslot);
-            System.out.println(response.getMessage());
-        } catch (RemoteException e) {
-            e.printStackTrace();
+            RMIResponse response = roomReservation.bookRoom(identifier, Parsing.getCampus(bufferedReader),
+                    Parsing.getRoomNumber(bufferedReader), Parsing.getDate(bufferedReader), Parsing.tryParseTimeslot(bufferedReader.readLine()));
+            if (response.getStatus())
+                System.out.println(ANSI_GREEN + response.getMessage() + RESET);
+            else
+                System.out.println(ANSI_RED + response.getMessage() + RESET);
+        } catch (IOException e){
+            System.out.println(ANSI_RED + "Exception: " + e.getMessage());
         }
     }
 
@@ -179,14 +135,13 @@ public class StudentClient {
         System.out.println("\nGET AVAILABLE TIME SLOTS");
         System.out.println("-----------");
         try {
-            Date date = new Date();
-            System.out.print("Enter date (ie. 2021-01-01): ");
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            date = dateFormat.parse(bufferedReader.readLine());
-            RMIResponse response = roomReservation.getAvailableTimeSlot(date);
-            System.out.println(response.getMessage());
-        } catch (ParseException | IOException e) {
-            e.printStackTrace();
+            RMIResponse response = roomReservation.getAvailableTimeSlot(Parsing.getDate(bufferedReader));
+            if (response.getStatus())
+                System.out.println(ANSI_GREEN + response.getMessage() + RESET);
+            else
+                System.out.println(ANSI_RED + response.getMessage() + RESET);
+        } catch (IOException e){
+            System.out.println(ANSI_RED + "Exception: " + e.getMessage());
         }
     }
 
@@ -194,12 +149,13 @@ public class StudentClient {
         System.out.println("\nCANCEL BOOKING");
         System.out.println("-----------");
         try {
-            System.out.print("Enter booking ID: ");
-            String bookingId = bufferedReader.readLine();
-            RMIResponse response = roomReservation.cancelBooking(bookingId);
-            System.out.println(response.getMessage());
+            RMIResponse response = roomReservation.cancelBooking(Parsing.getBookingId(bufferedReader));
+            if (response.getStatus())
+                System.out.println(ANSI_GREEN + response.getMessage() + RESET);
+            else
+                System.out.println(ANSI_RED + response.getMessage() + RESET);
         } catch (IOException e){
-            e.printStackTrace();
+            System.out.println(ANSI_RED + "Exception: " + e.getMessage());
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.roomreservation;
+package com.roomreservation.common;
 
 import java.sql.Timestamp;
 

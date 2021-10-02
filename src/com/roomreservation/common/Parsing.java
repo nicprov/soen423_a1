@@ -1,20 +1,69 @@
 package com.roomreservation.common;
 
-import com.roomreservation.Campus;
-
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.roomreservation.ConsoleColours.*;
+import static com.roomreservation.common.ConsoleColours.ANSI_RED;
+import static com.roomreservation.common.ConsoleColours.RESET;
 
 public class Parsing {
+
+    public static ArrayList<String> getTimeslosts(BufferedReader bufferedReader) throws IOException {
+        System.out.print("Enter a list of timeslots (ie. 9:30-10:00, 11:15-11:30): ");
+        ArrayList<String> timeslots = Parsing.tryParseTimeslotList(bufferedReader.readLine());
+        while (timeslots == null){
+            System.out.print(ANSI_RED + "Invalid timeslots provided, must be in the following format (ie. 9:30-10:00, 11:15-11:30): " + RESET);
+            timeslots = Parsing.tryParseTimeslotList(bufferedReader.readLine());
+        }
+        return timeslots;
+    }
+
+    public static Date getDate(BufferedReader bufferedReader) throws IOException {
+        System.out.print("Enter date (ie. 2021-01-01): ");
+        Date date = Parsing.tryParseDate(bufferedReader.readLine());
+        while (date == null){
+            System.out.print(ANSI_RED + "Invalid date format (ie. 2021-01-01): " + RESET);
+            date = Parsing.tryParseDate(bufferedReader.readLine());
+        }
+        return date;
+    }
+
+    public static int getRoomNumber(BufferedReader bufferedReader) throws IOException {
+        System.out.print("Enter room number  (ie. 201): ");
+        int roomNumber = Parsing.tryParseInt(bufferedReader.readLine());
+        while (roomNumber == -1){
+            System.out.print(ANSI_RED + "Invalid room number, must be an integer (ie. 201): " + RESET);
+            roomNumber = Parsing.tryParseInt(bufferedReader.readLine());
+        }
+        return roomNumber;
+    }
+
+    public static Campus getCampus(BufferedReader bufferedReader) throws IOException {
+        System.out.print("Enter campus name (dvl, kkl, wst): ");
+        Campus campus = Parsing.tryParseCampus(bufferedReader.readLine());
+        while (campus == null){
+            System.out.print(ANSI_RED + "Invalid campus, must be one of the following (dvl, kkl, wst): " + RESET);
+            campus = Parsing.tryParseCampus(bufferedReader.readLine());
+        }
+        return campus;
+    }
+
+    public static String getBookingId(BufferedReader bufferedReader) throws IOException {
+        System.out.print("Enter booking ID: ");
+        String bookingID = Parsing.tryParseUUID(bufferedReader.readLine());
+        while (bookingID == null){
+            System.out.print(ANSI_RED + "Invalid booking ID, must be a valid UUID (ie. a07002c2-ff53-4130-a831-e57ba864b751): " + RESET);
+            bookingID = Parsing.tryParseUUID(bufferedReader.readLine());
+        }
+        return bookingID;
+    }
+
     public static int tryParseInt(String value){
         try {
             return Integer.parseInt(value);
@@ -33,8 +82,14 @@ public class Parsing {
     }
 
     public static ArrayList<String> tryParseTimeslotList(String list){
-        //TODO validate that each entry is a valid timeslot
-        return new ArrayList<String>(Arrays.asList(list.split("\\s*,\\s*")));
+        List<String> tempList = Arrays.asList(list.split("\\s*,\\s*"));
+        if (tempList.size() == 0)
+            return null;
+        for (String timeslot: tempList){
+            if (Parsing.tryParseTimeslot(timeslot) == null)
+                return null;
+        }
+        return new ArrayList<String>(tempList);
     }
 
     public static String tryParseTimeslot(String timeslot){
@@ -60,5 +115,13 @@ public class Parsing {
             }
         }
         return null;
+    }
+
+    public static String tryParseUUID(String uuid){
+        try {
+            return UUID.fromString(uuid).toString();
+        } catch (IllegalArgumentException e){
+            return null;
+        }
     }
 }

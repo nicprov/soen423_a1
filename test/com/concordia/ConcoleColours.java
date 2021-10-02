@@ -2,7 +2,7 @@ package com.concordia;
 
 import org.junit.jupiter.api.Test;
 
-import static com.roomreservation.ConsoleColours.*;
+import static com.roomreservation.common.ConsoleColours.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ConcoleColours {

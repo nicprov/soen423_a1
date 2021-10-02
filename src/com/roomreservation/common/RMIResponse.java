@@ -1,7 +1,5 @@
-package com.roomreservation;
+package com.roomreservation.common;
 
-import com.roomreservation.protobuf.protos.RequestObject;
-import com.roomreservation.protobuf.protos.RequestObjectActions;
 import com.roomreservation.protobuf.protos.ResponseObject;
 
 import java.io.Serializable;
@@ -53,6 +51,10 @@ public class RMIResponse implements Serializable {
 
     public void setStatus(boolean status) {
         this.status = status;
+    }
+
+    public boolean getStatus(){
+        return this.status;
     }
 
     public RMIResponse fromResponseObject(ResponseObject responseObject) throws ParseException {

@@ -1,6 +1,7 @@
 package com.roomreservation;
 
 import com.roomreservation.common.Parsing;
+import com.roomreservation.common.RMIResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,17 +9,13 @@ import java.io.InputStreamReader;
 import java.rmi.ConnectException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.roomreservation.CampusInformation.*;
-import static com.roomreservation.ConsoleColours.*;
+import static com.roomreservation.common.CampusInformation.*;
+import static com.roomreservation.common.ConsoleColours.*;
 
 public class AdminClient {
     private static String identifier;
@@ -121,64 +118,30 @@ public class AdminClient {
 
         System.out.println("\nCREATE ROOM");
         System.out.println("-----------");
-        System.out.print("Enter room number  (ie. 201): ");
         try {
-            int roomNumber = Parsing.tryParseInt(bufferedReader.readLine());
-            while (roomNumber == -1){
-                System.out.print(ANSI_RED + "Invalid room number provided, must be an integer (ie. 201): " + RESET);
-                roomNumber = Parsing.tryParseInt(bufferedReader.readLine());
-            }
-
-            System.out.print("Enter date (ie. 2021-01-01): ");
-            Date date = Parsing.tryParseDate(bufferedReader.readLine());
-            while (date == null){
-                System.out.print(ANSI_RED + "Invalid date provided, must be in the following format (ie. 2021-01-01): " + RESET);
-                date = Parsing.tryParseDate(bufferedReader.readLine());
-            }
-
-            System.out.print("Enter a list of timeslots (ie. 9:30-10:00, 11:15-11:30): ");
-            ArrayList<String> timeslots = Parsing.tryParseTimeslotList(bufferedReader.readLine());
-            while (timeslots == null){
-                System.out.print(ANSI_RED + "Invalid timeslots provided, must be in the following format (ie. 9:30-10:00, 11:15-11:30): " + RESET);
-                timeslots = Parsing.tryParseTimeslotList(bufferedReader.readLine());
-            }
-            RMIResponse response = roomReservation.createRoom(roomNumber, date, timeslots);
-            System.out.println(response.getMessage());
-
+            RMIResponse response = roomReservation.createRoom(Parsing.getRoomNumber(bufferedReader),
+                    Parsing.getDate(bufferedReader), Parsing.getTimeslosts(bufferedReader));
+            if (response.getStatus())
+                System.out.println(ANSI_GREEN + response.getMessage() + RESET);
+            else
+                System.out.println(ANSI_RED + response.getMessage() + RESET);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(ANSI_RED + "Exception: " + e.getMessage());
         }
     }
 
     private static void deleteRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws RemoteException {
-        int roomNumber = 0;
-        Date date = new Date();
-        ArrayList<String> timeslots = new ArrayList<>();
-
         System.out.println("\nDELETE ROOM");
         System.out.println("-----------");
-        System.out.printf("Enter room number  (ie. 201): ");
         try {
-            roomNumber = Integer.parseInt(bufferedReader.readLine());
+            RMIResponse response = roomReservation.deleteRoom(Parsing.getRoomNumber(bufferedReader),
+                    Parsing.getDate(bufferedReader), Parsing.getTimeslosts(bufferedReader));
+            if (response.getStatus())
+                System.out.println(ANSI_GREEN + response.getMessage() + RESET);
+            else
+                System.out.println(ANSI_RED + response.getMessage() + RESET);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println(ANSI_RED + "Exception: " + e.getMessage());
         }
-        System.out.printf("Enter date (ie. 2021-01-01): ");
-        try {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-            date = dateFormat.parse(bufferedReader.readLine());
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.printf("Enter a list of timeslots (ie. 9:30-10:00, 11:15-11:30): ");
-        try {
-            timeslots = new ArrayList<String>(Arrays.asList(bufferedReader.readLine().split("\\s*,\\s*")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        RMIResponse response = roomReservation.deleteRoom(roomNumber, date, timeslots);
-        System.out.println(response.getMessage());
     }
 }

@@ -1,4 +1,4 @@
-package com.roomreservation;
+package com.roomreservation.common;
 
 public enum Campus {
     DVL,
