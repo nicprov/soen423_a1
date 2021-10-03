@@ -1,10 +1,10 @@
 package com.roomreservation.protobuf.protos;
 
-public enum RequestObjectActions {
+public enum RequestObjectAction {
     GetAvailableTimeslots,
     BookRoom,
     CancelBooking,
-    IncreaseBookingCount,
+    GetBookingCount,
     CreateRoom,
     DeleteRoom
 }

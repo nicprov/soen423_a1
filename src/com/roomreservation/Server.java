@@ -3,21 +3,19 @@ package com.roomreservation;
 import com.roomreservation.common.Campus;
 import com.roomreservation.common.RMIResponse;
 import com.roomreservation.protobuf.protos.RequestObject;
-import com.roomreservation.protobuf.protos.RequestObjectActions;
+import com.roomreservation.protobuf.protos.RequestObjectAction;
 import com.roomreservation.protobuf.protos.ResponseObject;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.rmi.Naming;
-import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,7 +43,7 @@ public class Server {
         }
     }
 
-    private static void startRMIServer(Campus campus) throws RemoteException, MalformedURLException {
+    private static void startRMIServer(Campus campus) throws IOException {
         String registryURL;
         switch (campus){
             case DVL:
@@ -91,62 +89,19 @@ public class Server {
             byte[] buffer = new byte[1000];
 
             while (true){
-                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-                datagramSocket.receive(request);
+                DatagramPacket datagramPacket = new DatagramPacket(buffer, buffer.length);
+                datagramSocket.receive(datagramPacket);
 
-                // Decode request object
-                RequestObject requestObject = RequestObject.parseFrom(trim(request.getData()));
-
-                // Build response object
-                ResponseObject responseObject;
-                ResponseObject.Builder tempObject;
-
-                // Perform action
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-
-                switch (RequestObjectActions.valueOf(requestObject.getAction())){
-                    case GetAvailableTimeslots:
-                        responseObject = new RMIResponse().toResponseObject(roomReservation.getAvailableTimeSlotOnCampus(dateFormat.parse(requestObject.getDate())));
-                        break;
-                    case BookRoom:
-                        responseObject = new RMIResponse().toResponseObject(roomReservation.bookRoom(requestObject.getIdentifier(), Campus.valueOf(requestObject.getCampusName()), requestObject.getRoomNumber(), dateFormat.parse(requestObject.getDate()), requestObject.getTimeslot()));
-                        break;
-                    case CancelBooking:
-                        responseObject = new RMIResponse().toResponseObject(roomReservation.cancelBooking(requestObject.getBookingId()));
-                        break;
-                    case IncreaseBookingCount:
-                        tempObject = ResponseObject.newBuilder();
-                        tempObject.setMessage("Increase Booking Count not supported through UDP");
-                        tempObject.setDateTime(roomReservation.dateTimeFormat.format(new Date()));
-                        tempObject.setRequestType(RequestObjectActions.IncreaseBookingCount.toString());
-                        tempObject.setRequestParameters("None");
-                        tempObject.setStatus(false);
-                        responseObject = tempObject.build();
-                        break;
-                    case CreateRoom:
-                        tempObject = ResponseObject.newBuilder();
-                        tempObject.setMessage("Create Room not supported through UDP");
-                        tempObject.setDateTime(roomReservation.dateTimeFormat.format(new Date()));
-                        tempObject.setRequestType(RequestObjectActions.CreateRoom.toString());
-                        tempObject.setRequestParameters("None");
-                        tempObject.setStatus(false);
-                        responseObject = tempObject.build();
-                        break;
-                    case DeleteRoom:
-                    default:
-                        tempObject = ResponseObject.newBuilder();
-                        tempObject.setMessage("Delete Room not supported through UDP");
-                        tempObject.setDateTime(roomReservation.dateTimeFormat.format(new Date()));
-                        tempObject.setRequestType(RequestObjectActions.DeleteRoom.toString());
-                        tempObject.setRequestParameters("None");
-                        tempObject.setStatus(false);
-                        responseObject = tempObject.build();
-                        break;
-                }
-                // Encode response object
-                byte[] response = responseObject.toByteArray();
-                DatagramPacket reply = new DatagramPacket(response, response.length, request.getAddress(), request.getPort());
-                datagramSocket.send(reply);
+                // Launch a new thread for each request
+                DatagramSocket finalDatagramSocket = datagramSocket;
+                Thread thread = new Thread(() -> {
+                    try {
+                        handleUDPRequest(finalDatagramSocket, datagramPacket);
+                    } catch (IOException | ParseException e) {
+                        System.out.println(ANSI_RED + "Exception: " + e.getMessage() + RESET);
+                    }
+                });
+                thread.start();
             }
         }
         catch (SocketException e){
@@ -167,11 +122,62 @@ public class Server {
         }
     }
 
-    private static Campus getCampus(String campus) throws IOException {
+    private static void handleUDPRequest(DatagramSocket datagramSocket, DatagramPacket datagramPacket) throws IOException, ParseException {
+        // Decode request object
+        RequestObject requestObject = RequestObject.parseFrom(trim(datagramPacket.getData()));
+
+        // Build response object
+        ResponseObject responseObject;
+        ResponseObject.Builder tempObject;
+
+        // Perform action
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+        switch (RequestObjectAction.valueOf(requestObject.getAction())){
+            case GetAvailableTimeslots:
+                responseObject = new RMIResponse().toResponseObject(roomReservation.getAvailableTimeSlotOnCampus(dateFormat.parse(requestObject.getDate())));
+                break;
+            case BookRoom:
+                responseObject = new RMIResponse().toResponseObject(roomReservation.bookRoom(requestObject.getIdentifier(), Campus.valueOf(requestObject.getCampusName().toUpperCase()), requestObject.getRoomNumber(), dateFormat.parse(requestObject.getDate()), requestObject.getTimeslot()));
+                break;
+            case CancelBooking:
+                responseObject = new RMIResponse().toResponseObject(roomReservation.cancelBooking(requestObject.getBookingId()));
+                break;
+            case GetBookingCount:
+                responseObject = new RMIResponse().toResponseObject(roomReservation.getBookingCount(requestObject.getIdentifier(), dateFormat.parse(requestObject.getDate())));
+                break;
+            case CreateRoom:
+                tempObject = ResponseObject.newBuilder();
+                tempObject.setMessage("Create Room not supported through UDP");
+                tempObject.setDateTime(roomReservation.dateFormat.format(new Date()));
+                tempObject.setRequestType(RequestObjectAction.CreateRoom.toString());
+                tempObject.setRequestParameters("None");
+                tempObject.setStatus(false);
+                responseObject = tempObject.build();
+                break;
+            case DeleteRoom:
+            default:
+                tempObject = ResponseObject.newBuilder();
+                tempObject.setMessage("Delete Room not supported through UDP");
+                tempObject.setDateTime(roomReservation.dateFormat.format(new Date()));
+                tempObject.setRequestType(RequestObjectAction.DeleteRoom.toString());
+                tempObject.setRequestParameters("None");
+                tempObject.setStatus(false);
+                responseObject = tempObject.build();
+                break;
+        }
+
+        // Encode response object
+        byte[] response = responseObject.toByteArray();
+        DatagramPacket reply = new DatagramPacket(response, response.length, datagramPacket.getAddress(), datagramPacket.getPort());
+        datagramSocket.send(reply);
+    }
+
+    private static Campus getCampus(String campus) {
         Pattern pattern = Pattern.compile("(dvl|kkl|wst)$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(campus);
         if (!matcher.find()) {
-            System.out.printf(ANSI_RED + "Invalid campus! Campus must be (DVL/KKL/WST)");
+            System.out.print(ANSI_RED + "Invalid campus! Campus must be (DVL/KKL/WST)");
             System.exit(1);
         }
         switch (campus){

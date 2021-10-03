@@ -73,9 +73,13 @@ public class RMIResponse implements Serializable {
         ResponseObject.Builder responseObject = ResponseObject.newBuilder();
         responseObject.setMessage(rmiResponse.message);
         responseObject.setDateTime(dateTimeFormat.format(rmiResponse.getDatetime()));
-        responseObject.setRequestType(rmiResponse.getRequestType().toString());
+        responseObject.setRequestType(rmiResponse.getRequestType());
         responseObject.setRequestParameters(rmiResponse.getRequestParameters());
         responseObject.setStatus(rmiResponse.status);
         return responseObject.build();
+    }
+
+    public String toString(){
+        return this.getDatetime() + "," + this.getMessage() + "," + this.getRequestType() + "," + this.getRequestParameters() + "," + this.getStatus();
     }
 }

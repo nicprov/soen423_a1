@@ -2,7 +2,6 @@ package com.roomreservation.common;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -84,7 +83,6 @@ public class Parsing {
 
     public static Date tryParseDate(String date){
         try {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
             return new SimpleDateFormat("yyyy-MM-dd").parse(date);
         } catch (ParseException e){
             return null;
@@ -99,7 +97,7 @@ public class Parsing {
             if (Parsing.tryParseTimeslot(timeslot) == null)
                 return null;
         }
-        return new ArrayList<String>(tempList);
+        return new ArrayList<>(tempList);
     }
 
     public static String tryParseTimeslot(String timeslot){

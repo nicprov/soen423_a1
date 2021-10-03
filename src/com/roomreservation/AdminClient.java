@@ -1,5 +1,6 @@
 package com.roomreservation;
 
+import com.roomreservation.common.Logger;
 import com.roomreservation.common.Parsing;
 import com.roomreservation.common.RMIResponse;
 
@@ -11,8 +12,6 @@ import java.rmi.ConnectException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,14 +19,14 @@ import static com.roomreservation.common.CampusInformation.*;
 import static com.roomreservation.common.ConsoleColours.*;
 
 public class AdminClient {
-    private static String identifier;
     private static String registryURL;
+    private static String logFilePath;
 
     public static void main(String[] args) {
         InputStreamReader is = new InputStreamReader(System.in);
         BufferedReader bufferedReader = new BufferedReader(is);
         try {
-            identifier = getIdentifier(bufferedReader);
+            String identifier = getIdentifier(bufferedReader);
             if (identifier.toLowerCase().startsWith("dvl")){
                 // Connect to Dorval-Campus (DVL)
                 registryURL = "rmi://" + host + ":" + dvlRMIPort + "/server";
@@ -38,6 +37,8 @@ public class AdminClient {
                 // Connect to Westmount-Campus (WST)
                 registryURL = "rmi://" + host + ":" + wstRMIPort + "/server";
             }
+            logFilePath = "log/client/" + identifier + ".csv";
+            Logger.initializeLog(logFilePath);
             System.out.println("Lookup completed");
             RoomReservationInterface roomReservation = (RoomReservationInterface) Naming.lookup(registryURL);
             startAdmin(roomReservation, bufferedReader);
@@ -56,12 +57,12 @@ public class AdminClient {
      * @throws IOException
      */
     private static String getIdentifier(BufferedReader br) throws IOException {
-        System.out.printf("Enter unique identifier: ");
+        System.out.print("Enter unique identifier: ");
         String identifier = br.readLine().trim();
         Pattern pattern = Pattern.compile("(dvl|kkl|wst)(a)[0-9]{4}$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(identifier);
         while (!matcher.find()){
-            System.out.printf(ANSI_RED + "Invalid identifier! Please enter your unique identifier: ");
+            System.out.print(ANSI_RED + "Invalid identifier! Please enter your unique identifier: ");
             identifier = br.readLine().trim();
             matcher = pattern.matcher(identifier);
         }
@@ -82,7 +83,7 @@ public class AdminClient {
         System.out.println("1. Create room");
         System.out.println("2. Delete room");
         System.out.println("3. Quit");
-        System.out.printf("Selection: ");
+        System.out.print("Selection: ");
         action = bufferedReader.readLine().trim();
         while (!action.equals("1") && !action.equals("2") && !action.equals("3")){
             System.out.println(ANSI_RED + "Invalid selection! Must select a valid action (1, 2, 3): " + RESET);
@@ -126,6 +127,7 @@ public class AdminClient {
                 System.out.println(ANSI_GREEN + response.getMessage() + RESET);
             else
                 System.out.println(ANSI_RED + response.getMessage() + RESET);
+            Logger.log(logFilePath, response);
         } catch (ConnectException e){
             System.out.println(ANSI_RED + "Unable to connect to remote server, retrying..." + RESET);
             Thread.sleep(1000);
@@ -146,6 +148,7 @@ public class AdminClient {
                 System.out.println(ANSI_GREEN + response.getMessage() + RESET);
             else
                 System.out.println(ANSI_RED + response.getMessage() + RESET);
+            Logger.log(logFilePath, response);
         } catch (ConnectException e){
             System.out.println(ANSI_RED + "Unable to connect to remote server, retrying..." + RESET);
             Thread.sleep(1000);

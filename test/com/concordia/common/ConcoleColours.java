@@ -1,4 +1,4 @@
-package com.concordia;
+package com.concordia.common;
 
 import org.junit.jupiter.api.Test;
 
