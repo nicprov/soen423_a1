@@ -259,15 +259,15 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             if (bookingIdentifier.getElement().getKey().equals(identifier)) {
                 for (Position<Entry<Date, Integer>> bookingDate: bookingIdentifier.getElement().getValue().positions()){
                     // Counter date is >= than provided date (-1 week) and Counter date is < provided date
-                    if ((bookingDate.getElement().getKey().compareTo(Date.from(tempDate.minusWeeks(1).atStartOfDay(ZoneId.systemDefault()).toInstant())) >= 0)
-                        && (bookingDate.getElement().getKey().compareTo(Date.from(tempDate.atStartOfDay(ZoneId.systemDefault()).toInstant())) < 0)){
+                    if ((bookingDate.getElement().getKey().compareTo(Date.from(tempDate.minusWeeks(1).atStartOfDay(ZoneId.systemDefault()).toInstant())) > 0)
+                        && (bookingDate.getElement().getKey().compareTo(Date.from(tempDate.atStartOfDay(ZoneId.systemDefault()).toInstant())) <= 0)){
                         // Within 1 week so it counts
-                        counter += 0;
-                        bookingIdentifier.getElement().getValue().set(bookingDate, new Node<>(date, bookingDate.getElement().getValue() - 1));
+                        counter += 1;
                     }
                 }
             }
         }
+        System.out.println("Booking count for (" + this.campus + "): " + counter);
         RMIResponse rmiResponse = new RMIResponse();
         rmiResponse.setStatus(true);
         rmiResponse.setMessage(Integer.toString(counter));
@@ -281,6 +281,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
     private RMIResponse bookRoomOnCampus(String identifier, int roomNumber, Date date, String timeslot) throws IOException {
         boolean isOverBookingCountLimit = false;
         boolean timeslotExist = false;
+        boolean isBooked = false;
         String bookingId = "";
         Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> datePosition = findDate(date);
         if (datePosition != null) {
@@ -314,10 +315,11 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                     // Increase if total booking count < 3, increase
                     if (totalBookingCount < 3) {
                         //Increase booking count
-                        //increaseBookingCounter(identifier, date);
+                        increaseBookingCounter(identifier, date);
 
                         if (timeslotPosition.getElement().getValue() == null){
                             // Create timeslot and add attributes
+                            isBooked = true;
                             bookingId = UUID.randomUUID().toString();
                             roomPosition.getElement().getValue().set(timeslotPosition, new Node<>(timeslot, new LinkedPositionalList<>()));
                             timeslotPosition.getElement().getValue().addFirst(new Node<>("bookingId", bookingId));
@@ -335,9 +337,12 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         } else if (isOverBookingCountLimit) {
             rmiResponse.setMessage("Unable to book room, maximum booking limit is reached");
             rmiResponse.setStatus(false);
-        } else {
+        } else if (isBooked){
                 rmiResponse.setMessage("Timeslot (" + timeslot + ") has been booked | Booking ID: " + bookingId);
                 rmiResponse.setStatus(true);
+        } else {
+            rmiResponse.setMessage("Unable to book room, timeslot (" + timeslot + ") has already booked");
+            rmiResponse.setStatus(false);
         }
         rmiResponse.setDatetime(new Date());
         rmiResponse.setRequestType(RequestObjectAction.CreateRoom.toString());
@@ -405,7 +410,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             byte[] buffer = new byte[1000];
             DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
             datagramSocket.receive(reply);
-            return new RMIResponse().fromResponseObject(ResponseObject.parseFrom(trim(reply.getData())));
+            return new RMIResponse().fromResponseObject(ResponseObject.parseFrom(trim(reply)));
         }
         catch (SocketException e){
             System.out.println(ANSI_RED + "Socket: " + e.getMessage() + RESET);
@@ -420,11 +425,10 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return null;
     }
 
-    private static byte[] trim(byte[] bytes) {
-        int length = bytes.length - 1;
-        while (length >= 0 && bytes[length] == 0)
-            --length;
-        return Arrays.copyOf(bytes, length + 1);
+    private static byte[] trim(DatagramPacket packet) {
+        byte[] data = new byte[packet.getLength()];
+        System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
+        return data;
     }
 
     private Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> findDate(Date date){

@@ -124,7 +124,7 @@ public class Server {
 
     private static void handleUDPRequest(DatagramSocket datagramSocket, DatagramPacket datagramPacket) throws IOException, ParseException {
         // Decode request object
-        RequestObject requestObject = RequestObject.parseFrom(trim(datagramPacket.getData()));
+        RequestObject requestObject = RequestObject.parseFrom(trim(datagramPacket));
 
         // Build response object
         ResponseObject responseObject;
@@ -138,7 +138,7 @@ public class Server {
                 responseObject = new RMIResponse().toResponseObject(roomReservation.getAvailableTimeSlotOnCampus(dateFormat.parse(requestObject.getDate())));
                 break;
             case BookRoom:
-                responseObject = new RMIResponse().toResponseObject(roomReservation.bookRoom(requestObject.getIdentifier(), Campus.valueOf(requestObject.getCampusName().toUpperCase()), requestObject.getRoomNumber(), dateFormat.parse(requestObject.getDate()), requestObject.getTimeslot()));
+                responseObject = new RMIResponse().toResponseObject(roomReservation.bookRoom(requestObject.getIdentifier(), Campus.valueOf(requestObject.getCampusName()), requestObject.getRoomNumber(), dateFormat.parse(requestObject.getDate()), requestObject.getTimeslot()));
                 break;
             case CancelBooking:
                 responseObject = new RMIResponse().toResponseObject(roomReservation.cancelBooking(requestObject.getBookingId()));
@@ -166,7 +166,6 @@ public class Server {
                 responseObject = tempObject.build();
                 break;
         }
-
         // Encode response object
         byte[] response = responseObject.toByteArray();
         DatagramPacket reply = new DatagramPacket(response, response.length, datagramPacket.getAddress(), datagramPacket.getPort());
@@ -197,10 +196,9 @@ public class Server {
         System.out.println("==============================");
     }
 
-    private static byte[] trim(byte[] bytes) {
-        int length = bytes.length - 1;
-        while (length >= 0 && bytes[length] == 0)
-            --length;
-        return Arrays.copyOf(bytes, length + 1);
+    private static byte[] trim(DatagramPacket packet) {
+        byte[] data = new byte[packet.getLength()];
+        System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
+        return data;
     }
 }
