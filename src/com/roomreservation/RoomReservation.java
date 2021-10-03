@@ -200,10 +200,10 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             for (Position<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>> roomPosition : datePosition.getElement().getValue().positions()) {
                 for (Position<Entry<String, LinkedPositionalList<Entry<String, String>>>> timeslotPosition : roomPosition.getElement().getValue().positions()) {
                     if (timeslotPosition.getElement().getValue() != null){
-                        String identifier = "";
                         for (Position<Entry<String, String>> timeslotPropertiesPosition : timeslotPosition.getElement().getValue().positions()) {
-                            if (timeslotPropertiesPosition.getElement().getValue().equals("studentId")){
-                                identifier = timeslotPropertiesPosition.getElement().getValue();
+                            if (timeslotPropertiesPosition.getElement().getKey().equals("studentId")){
+                                // Reduce booking count
+                                decreaseBookingCounter(timeslotPropertiesPosition.getElement().getValue(), datePosition.getElement().getKey());
                             }
                             if (timeslotPropertiesPosition.getElement().getKey().equals("bookingId") && timeslotPropertiesPosition.getElement().getValue().equals(bookingId)) {
                                 // Cancel booking
@@ -211,8 +211,6 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                                 bookingExist = true;
                             }
                         }
-                        // Reduce booking count
-                        decreaseBookingCounter(identifier, datePosition.getElement().getKey());
                     }
                 }
             }
@@ -262,7 +260,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                     if ((bookingDate.getElement().getKey().compareTo(Date.from(tempDate.minusWeeks(1).atStartOfDay(ZoneId.systemDefault()).toInstant())) > 0)
                         && (bookingDate.getElement().getKey().compareTo(Date.from(tempDate.atStartOfDay(ZoneId.systemDefault()).toInstant())) <= 0)){
                         // Within 1 week so it counts
-                        counter += 1;
+                        counter += bookingDate.getElement().getValue();
                     }
                 }
             }
