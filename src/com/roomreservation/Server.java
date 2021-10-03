@@ -14,7 +14,6 @@ import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -141,7 +140,7 @@ public class Server {
                 responseObject = new RMIResponse().toResponseObject(roomReservation.bookRoom(requestObject.getIdentifier(), Campus.valueOf(requestObject.getCampusName()), requestObject.getRoomNumber(), dateFormat.parse(requestObject.getDate()), requestObject.getTimeslot()));
                 break;
             case CancelBooking:
-                responseObject = new RMIResponse().toResponseObject(roomReservation.cancelBooking(requestObject.getBookingId()));
+                responseObject = new RMIResponse().toResponseObject(roomReservation.cancelBooking(requestObject.getIdentifier(), requestObject.getBookingId()));
                 break;
             case GetBookingCount:
                 responseObject = new RMIResponse().toResponseObject(roomReservation.getBookingCount(requestObject.getIdentifier(), dateFormat.parse(requestObject.getDate())));

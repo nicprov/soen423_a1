@@ -194,18 +194,22 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
     }
 
     @Override
-    public synchronized RMIResponse cancelBooking(String bookingId) throws IOException {
+    public synchronized RMIResponse cancelBooking(String identifier, String bookingId) throws IOException {
         boolean bookingExist = false;
+        boolean studentIdMatched = false;
         for (Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> datePosition : database.positions()) {
             for (Position<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>> roomPosition : datePosition.getElement().getValue().positions()) {
                 for (Position<Entry<String, LinkedPositionalList<Entry<String, String>>>> timeslotPosition : roomPosition.getElement().getValue().positions()) {
                     if (timeslotPosition.getElement().getValue() != null){
                         for (Position<Entry<String, String>> timeslotPropertiesPosition : timeslotPosition.getElement().getValue().positions()) {
-                            if (timeslotPropertiesPosition.getElement().getKey().equals("studentId")){
+                            if (timeslotPropertiesPosition.getElement().getKey().equals("studentId") && timeslotPropertiesPosition.getElement().getValue().equals(identifier)){
+                                // Ensures that it's the same student that booked the room
+                                studentIdMatched = true;
+
                                 // Reduce booking count
                                 decreaseBookingCounter(timeslotPropertiesPosition.getElement().getValue(), datePosition.getElement().getKey());
                             }
-                            if (timeslotPropertiesPosition.getElement().getKey().equals("bookingId") && timeslotPropertiesPosition.getElement().getValue().equals(bookingId)) {
+                            if (timeslotPropertiesPosition.getElement().getKey().equals("bookingId") && timeslotPropertiesPosition.getElement().getValue().equals(bookingId) && studentIdMatched) {
                                 // Cancel booking
                                 timeslotPosition.getElement().getValue().set(timeslotPropertiesPosition, null);
                                 bookingExist = true;

@@ -16,5 +16,5 @@ public interface RoomReservationInterface extends Remote {
     /* Student role */
     RMIResponse bookRoom(String identifier, Campus campusName, int roomNumber, Date date, String timeslot) throws IOException;
     RMIResponse getAvailableTimeSlot(Date date) throws IOException;
-    RMIResponse cancelBooking(String bookingId) throws IOException;
+    RMIResponse cancelBooking(String identifier, String bookingId) throws IOException;
 }

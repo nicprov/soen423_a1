@@ -169,7 +169,7 @@ public class StudentClient {
         System.out.println("\nCANCEL BOOKING");
         System.out.println("-----------");
         try {
-            RMIResponse response = roomReservation.cancelBooking(Parsing.getBookingId(bufferedReader));
+            RMIResponse response = roomReservation.cancelBooking(identifier, Parsing.getBookingId(bufferedReader));
             if (response.getStatus())
                 System.out.println(ANSI_GREEN + response.getMessage() + RESET);
             else
