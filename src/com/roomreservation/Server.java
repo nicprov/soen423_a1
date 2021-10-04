@@ -2,13 +2,12 @@ package com.roomreservation;
 
 import com.roomreservation.common.Campus;
 import com.roomreservation.common.RMIResponse;
-import com.roomreservation.protobuf.protos.RequestObject;
-import com.roomreservation.protobuf.protos.RequestObjectAction;
-import com.roomreservation.protobuf.protos.ResponseObject;
+import com.roomreservation.protobuf.protos.*;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
@@ -19,9 +18,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.roomreservation.common.ConsoleColours.*;
-import static com.roomreservation.common.CampusInformation.*;
 
 public class Server {
+
+    private static final String HOST = "localhost";
+    private static final String PATH = "server";
 
     private static RoomReservation roomReservation;
 
@@ -44,47 +45,37 @@ public class Server {
 
     private static void startRMIServer(Campus campus) throws IOException {
         String registryURL;
-        switch (campus){
-            case DVL:
-                roomReservation = new RoomReservation(campus);
-                registryURL = "rmi://" + host + ":" + dvlRMIPort + "/server";
-                LocateRegistry.createRegistry(dvlRMIPort);
-                printWelcome(campus);
-                break;
-            case KKL:
-                roomReservation = new RoomReservation(campus);
-                registryURL = "rmi://" + host + ":" + kklRMIPort + "/server";
-                LocateRegistry.createRegistry(kklRMIPort);
-                printWelcome(campus);
-                break;
-            case WST:
-            default:
-                roomReservation = new RoomReservation(campus);
-                registryURL = "rmi://" + host + ":" + wstRMIPort + "/server";
-                LocateRegistry.createRegistry(wstRMIPort);
-                printWelcome(campus);
-                break;
+        roomReservation = new RoomReservation(campus);
+        int remotePort = getServerPort();
+        if (remotePort == -1){
+            System.out.println(ANSI_RED + "Unable to get available port, central repository may be down" + RESET);
+            System.exit(1);
         }
+        if (!registerServer(campus.toString(), "rmi", remotePort)){
+            System.out.println(ANSI_RED + "Unable to register server, central repository may be down" + RESET);
+            System.exit(1);
+        }
+        registryURL = "rmi://" + HOST + ":" + remotePort + "/" + PATH;
+        LocateRegistry.createRegistry(remotePort);
+        printWelcome(campus);
         Naming.rebind(registryURL, roomReservation);
-        System.out.println("RMI Server ready");
+        System.out.println("RMI Server ready (port: " + remotePort + ")");
     }
 
     private static void startUDPServer(Campus campus){
         DatagramSocket datagramSocket = null;
         try {
-            switch (campus){
-                case DVL:
-                    datagramSocket = new DatagramSocket(dvlUDPPort);
-                    break;
-                case KKL:
-                    datagramSocket = new DatagramSocket(kklUDPPort);
-                    break;
-                case WST:
-                default:
-                    datagramSocket = new DatagramSocket(wstUDPPort);
-                    break;
+            int remotePort = getServerPort();
+            if (remotePort == -1){
+                System.out.println(ANSI_RED + "Unable to get available port, central repository may be down" + RESET);
+                System.exit(1);
             }
-            System.out.println("UDP Server ready");
+            if (!registerServer(campus.toString(), "udp", remotePort)){
+                System.out.println(ANSI_RED + "Unable to register server, central repository may be down" + RESET);
+                System.exit(1);
+            }
+            datagramSocket = new DatagramSocket(remotePort);
+            System.out.println("UDP Server ready (port: " + remotePort + ")");
             byte[] buffer = new byte[1000];
 
             while (true){
@@ -199,5 +190,55 @@ public class Server {
         byte[] data = new byte[packet.getLength()];
         System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
         return data;
+    }
+
+    private static int getServerPort(){
+        CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
+        centralRepositoryRequest.setAction(CentralRepositoryAction.GetAvailablePort.toString());
+        CentralRepository centralRepositoryResponse = udpTransfer(centralRepositoryRequest.build());
+        if (centralRepositoryResponse == null)
+            return -1;
+        if (!centralRepositoryResponse.getStatus())
+            return -1;
+        return Integer.parseInt(centralRepositoryResponse.getPort());
+    }
+
+    private static boolean registerServer(String campus, String type, int port){
+        CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
+        centralRepositoryRequest.setAction(CentralRepositoryAction.Register.toString());
+        centralRepositoryRequest.setPort(Integer.toString(port));
+        centralRepositoryRequest.setPath(PATH);
+        centralRepositoryRequest.setHost(HOST);
+        centralRepositoryRequest.setType(type);
+        centralRepositoryRequest.setCampus(campus);
+        CentralRepository centralRepositoryResponse = udpTransfer(centralRepositoryRequest.build());
+        if (centralRepositoryResponse != null)
+            return centralRepositoryResponse.getStatus();
+        return false;
+    }
+
+    private static CentralRepository udpTransfer(CentralRepository centralRepositoryRequest){
+        DatagramSocket datagramSocket = null;
+        try {
+            int remotePort = 1024;
+            datagramSocket = new DatagramSocket();
+            datagramSocket.setSoTimeout(1000); // Set timeout
+            InetAddress host = InetAddress.getLocalHost();
+            DatagramPacket request = new DatagramPacket(centralRepositoryRequest.toByteArray(), centralRepositoryRequest.toByteArray().length, host, remotePort);
+            datagramSocket.send(request);
+            byte[] buffer = new byte[1000];
+            DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+            datagramSocket.receive(reply);
+            return CentralRepository.parseFrom(trim(reply));
+        }
+        catch (SocketException e){
+            System.out.println(ANSI_RED + "Socket: " + e.getMessage() + RESET);
+        } catch (IOException e){
+            System.out.println(ANSI_RED + "IO: " + e.getMessage() + RESET);
+        } finally {
+            if (datagramSocket != null)
+                datagramSocket.close();
+        }
+        return null;
     }
 }

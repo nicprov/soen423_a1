@@ -24,7 +24,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 
-import static com.roomreservation.common.CampusInformation.*;
 import static com.roomreservation.common.ConsoleColours.ANSI_RED;
 import static com.roomreservation.common.ConsoleColours.RESET;
 
@@ -395,16 +394,18 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             datagramSocket = new DatagramSocket();
             datagramSocket.setSoTimeout(1000); // Set timeout
             InetAddress host = InetAddress.getLocalHost();
+
+            // TODO
             switch (campus){
                 case DVL:
-                    remotePort = dvlUDPPort;
+                    remotePort = 1234;
                     break;
                 case KKL:
-                    remotePort = kklUDPPort;
+                    remotePort = 1234;
                     break;
                 case WST:
                 default:
-                    remotePort = wstUDPPort;
+                    remotePort = 1234;
                     break;
             }
             DatagramPacket request = new DatagramPacket(requestObject.toByteArray(), requestObject.toByteArray().length, host, remotePort);

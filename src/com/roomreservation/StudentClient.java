@@ -3,11 +3,13 @@ package com.roomreservation;
 import com.roomreservation.common.Logger;
 import com.roomreservation.common.Parsing;
 import com.roomreservation.common.RMIResponse;
+import com.roomreservation.protobuf.protos.CentralRepository;
+import com.roomreservation.protobuf.protos.CentralRepositoryAction;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
+import java.net.*;
 import java.rmi.ConnectException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -15,7 +17,7 @@ import java.rmi.RemoteException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.roomreservation.common.CampusInformation.*;
+import static com.roomreservation.common.CentralRepositoryUtils.lookupServer;
 import static com.roomreservation.common.ConsoleColours.*;
 
 public class StudentClient {
@@ -28,16 +30,12 @@ public class StudentClient {
         BufferedReader bufferedReader = new BufferedReader(is);
         try {
             identifier = getIdentifier(bufferedReader);
-            if (identifier.toLowerCase().startsWith("dvl")) {
-                // Connect to Dorval-Campus (DVL)
-                registryURL = "rmi://" + host + ":" + dvlRMIPort + "/server";
-            } else if (identifier.toLowerCase().startsWith("kkl")) {
-                // Connect to Kirkland-Campus (KKL)
-                registryURL = "rmi://" + host + ":" + kklRMIPort + "/server";
-            } else {
-                // Connect to Westmount-Campus (WST)
-                registryURL = "rmi://" + host + ":" + wstRMIPort + "/server";
+            CentralRepository centralRepository = lookupServer(identifier.substring(0, 3), "rmi");
+            if (centralRepository == null || !centralRepository.getStatus()){
+                System.out.println("Unable to lookup server with central repository");
+                System.exit(1);
             }
+            registryURL = "rmi://" + centralRepository.getHost() + ":" + centralRepository.getPort() + "/" + centralRepository.getPath();
             logFilePath = "log/client/" + identifier + ".csv";
             Logger.initializeLog(logFilePath);
             System.out.println("Lookup completed");

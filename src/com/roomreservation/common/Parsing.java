@@ -13,7 +13,7 @@ import static com.roomreservation.common.ConsoleColours.RESET;
 
 public class Parsing {
 
-    public static ArrayList<String> getTimeslosts(BufferedReader bufferedReader) throws IOException {
+    public static ArrayList<String> getTimeslots(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter a list of timeslots (ie. 9:30-10:00, 11:15-11:30): ");
         ArrayList<String> timeslots = Parsing.tryParseTimeslotList(bufferedReader.readLine());
         while (timeslots == null){
