@@ -42,21 +42,15 @@ public interface CentralRepositoryOrBuilder extends
       getHostBytes();
 
   /**
-   * <code>optional string port = 4;</code>
+   * <code>optional int32 port = 4;</code>
    * @return Whether the port field is set.
    */
   boolean hasPort();
   /**
-   * <code>optional string port = 4;</code>
+   * <code>optional int32 port = 4;</code>
    * @return The port.
    */
-  java.lang.String getPort();
-  /**
-   * <code>optional string port = 4;</code>
-   * @return The bytes for port.
-   */
-  com.google.protobuf.ByteString
-      getPortBytes();
+  int getPort();
 
   /**
    * <code>optional string path = 5;</code>

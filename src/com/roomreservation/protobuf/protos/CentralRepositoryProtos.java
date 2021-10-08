@@ -31,7 +31,7 @@ public final class CentralRepositoryProtos {
       "\n\027centralRepository.proto\022\036com.roomreser" +
       "vation.collection\"{\n\021CentralRepository\022\016" +
       "\n\006action\030\001 \001(\t\022\014\n\004host\030\003 \001(\t\022\014\n\004port\030\004 \001" +
-      "(\t\022\014\n\004path\030\005 \001(\t\022\016\n\006campus\030\006 \001(\t\022\014\n\004type" +
+      "(\005\022\014\n\004path\030\005 \001(\t\022\016\n\006campus\030\006 \001(\t\022\014\n\004type" +
       "\030\007 \001(\t\022\016\n\006status\030\010 \001(\010B@\n#com.roomreserv" +
       "ation.protobuf.protosB\027CentralRepository" +
       "ProtosP\001"

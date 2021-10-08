@@ -13,6 +13,9 @@ import static com.roomreservation.common.ConsoleColours.ANSI_RED;
 import static com.roomreservation.common.ConsoleColours.RESET;
 
 public class CentralRepositoryUtils {
+    public static final String SERVER_HOST = "localhost";
+    public static final String SERVER_PATH = "server";
+
     public static byte[] trim(DatagramPacket packet) {
         byte[] data = new byte[packet.getLength()];
         System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
@@ -50,5 +53,30 @@ public class CentralRepositoryUtils {
                 datagramSocket.close();
         }
         return null;
+    }
+
+    public static int getServerPort(){
+        CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
+        centralRepositoryRequest.setAction(CentralRepositoryAction.GetAvailablePort.toString());
+        CentralRepository centralRepositoryResponse = udpTransfer(centralRepositoryRequest.build());
+        if (centralRepositoryResponse == null)
+            return -1;
+        if (!centralRepositoryResponse.getStatus())
+            return -1;
+        return centralRepositoryResponse.getPort();
+    }
+
+    public static boolean registerServer(String campus, String type, int port){
+        CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
+        centralRepositoryRequest.setAction(CentralRepositoryAction.Register.toString());
+        centralRepositoryRequest.setPort(port);
+        centralRepositoryRequest.setPath(SERVER_PATH);
+        centralRepositoryRequest.setHost(SERVER_HOST);
+        centralRepositoryRequest.setType(type);
+        centralRepositoryRequest.setCampus(campus);
+        CentralRepository centralRepositoryResponse = udpTransfer(centralRepositoryRequest.build());
+        if (centralRepositoryResponse != null)
+            return centralRepositoryResponse.getStatus();
+        return false;
     }
 }

@@ -18,7 +18,6 @@ private static final long serialVersionUID = 0L;
   private CentralRepository() {
     action_ = "";
     host_ = "";
-    port_ = "";
     path_ = "";
     campus_ = "";
     type_ = "";
@@ -67,10 +66,9 @@ private static final long serialVersionUID = 0L;
             host_ = bs;
             break;
           }
-          case 34: {
-            com.google.protobuf.ByteString bs = input.readBytes();
+          case 32: {
             bitField0_ |= 0x00000004;
-            port_ = bs;
+            port_ = input.readInt32();
             break;
           }
           case 42: {
@@ -226,9 +224,9 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int PORT_FIELD_NUMBER = 4;
-  private volatile java.lang.Object port_;
+  private int port_;
   /**
-   * <code>optional string port = 4;</code>
+   * <code>optional int32 port = 4;</code>
    * @return Whether the port field is set.
    */
   @java.lang.Override
@@ -236,41 +234,12 @@ private static final long serialVersionUID = 0L;
     return ((bitField0_ & 0x00000004) != 0);
   }
   /**
-   * <code>optional string port = 4;</code>
+   * <code>optional int32 port = 4;</code>
    * @return The port.
    */
   @java.lang.Override
-  public java.lang.String getPort() {
-    java.lang.Object ref = port_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      if (bs.isValidUtf8()) {
-        port_ = s;
-      }
-      return s;
-    }
-  }
-  /**
-   * <code>optional string port = 4;</code>
-   * @return The bytes for port.
-   */
-  @java.lang.Override
-  public com.google.protobuf.ByteString
-      getPortBytes() {
-    java.lang.Object ref = port_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      port_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+  public int getPort() {
+    return port_;
   }
 
   public static final int PATH_FIELD_NUMBER = 5;
@@ -457,7 +426,7 @@ private static final long serialVersionUID = 0L;
       com.google.protobuf.GeneratedMessageV3.writeString(output, 3, host_);
     }
     if (((bitField0_ & 0x00000004) != 0)) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 4, port_);
+      output.writeInt32(4, port_);
     }
     if (((bitField0_ & 0x00000008) != 0)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 5, path_);
@@ -487,7 +456,8 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, host_);
     }
     if (((bitField0_ & 0x00000004) != 0)) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, port_);
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt32Size(4, port_);
     }
     if (((bitField0_ & 0x00000008) != 0)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, path_);
@@ -529,8 +499,8 @@ private static final long serialVersionUID = 0L;
     }
     if (hasPort() != other.hasPort()) return false;
     if (hasPort()) {
-      if (!getPort()
-          .equals(other.getPort())) return false;
+      if (getPort()
+          != other.getPort()) return false;
     }
     if (hasPath() != other.hasPath()) return false;
     if (hasPath()) {
@@ -573,7 +543,7 @@ private static final long serialVersionUID = 0L;
     }
     if (hasPort()) {
       hash = (37 * hash) + PORT_FIELD_NUMBER;
-      hash = (53 * hash) + getPort().hashCode();
+      hash = (53 * hash) + getPort();
     }
     if (hasPath()) {
       hash = (37 * hash) + PATH_FIELD_NUMBER;
@@ -729,7 +699,7 @@ private static final long serialVersionUID = 0L;
       bitField0_ = (bitField0_ & ~0x00000001);
       host_ = "";
       bitField0_ = (bitField0_ & ~0x00000002);
-      port_ = "";
+      port_ = 0;
       bitField0_ = (bitField0_ & ~0x00000004);
       path_ = "";
       bitField0_ = (bitField0_ & ~0x00000008);
@@ -776,9 +746,9 @@ private static final long serialVersionUID = 0L;
       }
       result.host_ = host_;
       if (((from_bitField0_ & 0x00000004) != 0)) {
+        result.port_ = port_;
         to_bitField0_ |= 0x00000004;
       }
-      result.port_ = port_;
       if (((from_bitField0_ & 0x00000008) != 0)) {
         to_bitField0_ |= 0x00000008;
       }
@@ -855,9 +825,7 @@ private static final long serialVersionUID = 0L;
         onChanged();
       }
       if (other.hasPort()) {
-        bitField0_ |= 0x00000004;
-        port_ = other.port_;
-        onChanged();
+        setPort(other.getPort());
       }
       if (other.hasPath()) {
         bitField0_ |= 0x00000008;
@@ -1075,86 +1043,41 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object port_ = "";
+    private int port_ ;
     /**
-     * <code>optional string port = 4;</code>
+     * <code>optional int32 port = 4;</code>
      * @return Whether the port field is set.
      */
+    @java.lang.Override
     public boolean hasPort() {
       return ((bitField0_ & 0x00000004) != 0);
     }
     /**
-     * <code>optional string port = 4;</code>
+     * <code>optional int32 port = 4;</code>
      * @return The port.
      */
-    public java.lang.String getPort() {
-      java.lang.Object ref = port_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          port_ = s;
-        }
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    @java.lang.Override
+    public int getPort() {
+      return port_;
     }
     /**
-     * <code>optional string port = 4;</code>
-     * @return The bytes for port.
-     */
-    public com.google.protobuf.ByteString
-        getPortBytes() {
-      java.lang.Object ref = port_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        port_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-    /**
-     * <code>optional string port = 4;</code>
+     * <code>optional int32 port = 4;</code>
      * @param value The port to set.
      * @return This builder for chaining.
      */
-    public Builder setPort(
-        java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000004;
+    public Builder setPort(int value) {
+      bitField0_ |= 0x00000004;
       port_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>optional string port = 4;</code>
+     * <code>optional int32 port = 4;</code>
      * @return This builder for chaining.
      */
     public Builder clearPort() {
       bitField0_ = (bitField0_ & ~0x00000004);
-      port_ = getDefaultInstance().getPort();
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>optional string port = 4;</code>
-     * @param value The bytes for port to set.
-     * @return This builder for chaining.
-     */
-    public Builder setPortBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000004;
-      port_ = value;
+      port_ = 0;
       onChanged();
       return this;
     }

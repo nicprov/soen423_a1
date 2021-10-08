@@ -10,6 +10,7 @@ import com.roomreservation.protobuf.protos.CentralRepositoryAction;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.ServerSocket;
 import java.net.SocketException;
 import java.util.ArrayList;
 
@@ -115,11 +116,11 @@ public class CentralRepositoryServer {
                 }
                 if (!campusExist) {
                     LinkedPositionalList<Entry<String, String>> server = new LinkedPositionalList<>();
-                    server.addFirst(new Node<>("port", requestCentralRepository.getPort()));
+                    server.addFirst(new Node<>("port", String.valueOf(requestCentralRepository.getPort())));
                     server.addFirst(new Node<>("host", requestCentralRepository.getHost()));
                     server.addFirst(new Node<>("path", requestCentralRepository.getPath()));
                     typePosition.getElement().getValue().addFirst(new Node<>(requestCentralRepository.getCampus(), server));
-                    usedPorts.add(Integer.parseInt(requestCentralRepository.getPort()));
+                    usedPorts.add(requestCentralRepository.getPort());
                     status = true;
                 }
             }
@@ -140,7 +141,7 @@ public class CentralRepositoryServer {
                         for (Position<Entry<String, String>> serverInfo: campusPosition.getElement().getValue().positions()){
                             switch (serverInfo.getElement().getKey()){
                                 case "port":
-                                    responseCentralRepository.setPort(serverInfo.getElement().getValue());
+                                    responseCentralRepository.setPort(Integer.parseInt(serverInfo.getElement().getValue()));
                                     break;
                                 case "host":
                                     responseCentralRepository.setHost(serverInfo.getElement().getValue());
@@ -161,13 +162,36 @@ public class CentralRepositoryServer {
 
     private static CentralRepository getAvailablePort(){
         int randomPort = randomNumberGenerator();
-        while (usedPorts.contains(randomPort))
+        while (usedPorts.contains(randomPort) && !testPort(randomPort))
             randomPort = randomNumberGenerator();
         CentralRepository.Builder responseCentralRepository = CentralRepository.newBuilder();
-        responseCentralRepository.setPort(Integer.toString(randomPort));
+        responseCentralRepository.setPort(randomPort);
         responseCentralRepository.setStatus(true);
         responseCentralRepository.setAction(CentralRepositoryAction.GetAvailablePort.toString());
         return responseCentralRepository.build();
+    }
+
+    private static boolean testPort(int port){
+        ServerSocket socket = null;
+        DatagramSocket datagramSocket = null;
+        try {
+            socket = new ServerSocket(port);
+            socket.setReuseAddress(true);
+            datagramSocket = new DatagramSocket(port);
+            datagramSocket.setReuseAddress(true);
+            return true;
+        } catch (IOException e){
+        } finally {
+            if (datagramSocket != null)
+                datagramSocket.close();
+            if (socket != null) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                }
+            }
+        }
+        return false;
     }
 
     private static int randomNumberGenerator(){

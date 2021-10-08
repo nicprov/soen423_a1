@@ -1,13 +1,14 @@
 package com.roomreservation;
 
 import com.roomreservation.common.Campus;
+import com.roomreservation.common.CentralRepositoryUtils;
+import com.roomreservation.common.Parsing;
 import com.roomreservation.common.RMIResponse;
 import com.roomreservation.protobuf.protos.*;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
 import java.rmi.Naming;
 import java.rmi.registry.LocateRegistry;
@@ -20,9 +21,6 @@ import java.util.regex.Pattern;
 import static com.roomreservation.common.ConsoleColours.*;
 
 public class Server {
-
-    private static final String HOST = "localhost";
-    private static final String PATH = "server";
 
     private static RoomReservation roomReservation;
 
@@ -46,16 +44,25 @@ public class Server {
     private static void startRMIServer(Campus campus) throws IOException {
         String registryURL;
         roomReservation = new RoomReservation(campus);
-        int remotePort = getServerPort();
-        if (remotePort == -1){
-            System.out.println(ANSI_RED + "Unable to get available port, central repository may be down" + RESET);
-            System.exit(1);
+
+        // Lookup server to see if it is already registered
+        int remotePort;
+        CentralRepository centralRepository = CentralRepositoryUtils.lookupServer(campus.toString(), "rmi");
+        if (centralRepository != null && centralRepository.getStatus()){
+            remotePort = centralRepository.getPort();
+        } else {
+            // Get a new port if not
+            remotePort = CentralRepositoryUtils.getServerPort();
+            if (remotePort == -1){
+                System.out.println(ANSI_RED + "Unable to get available port, central repository may be down" + RESET);
+                System.exit(1);
+            }
+            if (!CentralRepositoryUtils.registerServer(campus.toString(), "rmi", remotePort)){
+                System.out.println(ANSI_RED + "Unable to register server, central repository may be down" + RESET);
+                System.exit(1);
+            }
         }
-        if (!registerServer(campus.toString(), "rmi", remotePort)){
-            System.out.println(ANSI_RED + "Unable to register server, central repository may be down" + RESET);
-            System.exit(1);
-        }
-        registryURL = "rmi://" + HOST + ":" + remotePort + "/" + PATH;
+        registryURL = "rmi://" + CentralRepositoryUtils.SERVER_HOST + ":" + remotePort + "/" + CentralRepositoryUtils.SERVER_PATH;
         LocateRegistry.createRegistry(remotePort);
         printWelcome(campus);
         Naming.rebind(registryURL, roomReservation);
@@ -65,14 +72,21 @@ public class Server {
     private static void startUDPServer(Campus campus){
         DatagramSocket datagramSocket = null;
         try {
-            int remotePort = getServerPort();
-            if (remotePort == -1){
-                System.out.println(ANSI_RED + "Unable to get available port, central repository may be down" + RESET);
-                System.exit(1);
-            }
-            if (!registerServer(campus.toString(), "udp", remotePort)){
-                System.out.println(ANSI_RED + "Unable to register server, central repository may be down" + RESET);
-                System.exit(1);
+            // Lookup server to see if it is already registered
+            int remotePort;
+            CentralRepository centralRepository = CentralRepositoryUtils.lookupServer(campus.toString(), "udp");
+            if (centralRepository != null && centralRepository.getStatus()) {
+                remotePort = centralRepository.getPort();
+            } else {
+                remotePort = CentralRepositoryUtils.getServerPort();
+                if (remotePort == -1){
+                    System.out.println(ANSI_RED + "Unable to get available port, central repository may be down" + RESET);
+                    System.exit(1);
+                }
+                if (!CentralRepositoryUtils.registerServer(campus.toString(), "udp", remotePort)){
+                    System.out.println(ANSI_RED + "Unable to register server, central repository may be down" + RESET);
+                    System.exit(1);
+                }
             }
             datagramSocket = new DatagramSocket(remotePort);
             System.out.println("UDP Server ready (port: " + remotePort + ")");
@@ -114,7 +128,7 @@ public class Server {
 
     private static void handleUDPRequest(DatagramSocket datagramSocket, DatagramPacket datagramPacket) throws IOException, ParseException {
         // Decode request object
-        RequestObject requestObject = RequestObject.parseFrom(trim(datagramPacket));
+        RequestObject requestObject = RequestObject.parseFrom(CentralRepositoryUtils.trim(datagramPacket));
 
         // Build response object
         ResponseObject responseObject;
@@ -122,7 +136,6 @@ public class Server {
 
         // Perform action
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-
         switch (RequestObjectAction.valueOf(requestObject.getAction())){
             case GetAvailableTimeslots:
                 responseObject = new RMIResponse().toResponseObject(roomReservation.getAvailableTimeSlotOnCampus(dateFormat.parse(requestObject.getDate())));
@@ -184,61 +197,5 @@ public class Server {
         System.out.println("==============================");
         System.out.println("Welcome to the " + campus.toString().toUpperCase() + " campus!");
         System.out.println("==============================");
-    }
-
-    private static byte[] trim(DatagramPacket packet) {
-        byte[] data = new byte[packet.getLength()];
-        System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
-        return data;
-    }
-
-    private static int getServerPort(){
-        CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
-        centralRepositoryRequest.setAction(CentralRepositoryAction.GetAvailablePort.toString());
-        CentralRepository centralRepositoryResponse = udpTransfer(centralRepositoryRequest.build());
-        if (centralRepositoryResponse == null)
-            return -1;
-        if (!centralRepositoryResponse.getStatus())
-            return -1;
-        return Integer.parseInt(centralRepositoryResponse.getPort());
-    }
-
-    private static boolean registerServer(String campus, String type, int port){
-        CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
-        centralRepositoryRequest.setAction(CentralRepositoryAction.Register.toString());
-        centralRepositoryRequest.setPort(Integer.toString(port));
-        centralRepositoryRequest.setPath(PATH);
-        centralRepositoryRequest.setHost(HOST);
-        centralRepositoryRequest.setType(type);
-        centralRepositoryRequest.setCampus(campus);
-        CentralRepository centralRepositoryResponse = udpTransfer(centralRepositoryRequest.build());
-        if (centralRepositoryResponse != null)
-            return centralRepositoryResponse.getStatus();
-        return false;
-    }
-
-    private static CentralRepository udpTransfer(CentralRepository centralRepositoryRequest){
-        DatagramSocket datagramSocket = null;
-        try {
-            int remotePort = 1024;
-            datagramSocket = new DatagramSocket();
-            datagramSocket.setSoTimeout(1000); // Set timeout
-            InetAddress host = InetAddress.getLocalHost();
-            DatagramPacket request = new DatagramPacket(centralRepositoryRequest.toByteArray(), centralRepositoryRequest.toByteArray().length, host, remotePort);
-            datagramSocket.send(request);
-            byte[] buffer = new byte[1000];
-            DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
-            datagramSocket.receive(reply);
-            return CentralRepository.parseFrom(trim(reply));
-        }
-        catch (SocketException e){
-            System.out.println(ANSI_RED + "Socket: " + e.getMessage() + RESET);
-        } catch (IOException e){
-            System.out.println(ANSI_RED + "IO: " + e.getMessage() + RESET);
-        } finally {
-            if (datagramSocket != null)
-                datagramSocket.close();
-        }
-        return null;
     }
 }

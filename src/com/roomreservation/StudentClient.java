@@ -1,5 +1,6 @@
 package com.roomreservation;
 
+import com.roomreservation.common.CentralRepositoryUtils;
 import com.roomreservation.common.Logger;
 import com.roomreservation.common.Parsing;
 import com.roomreservation.common.RMIResponse;
@@ -17,7 +18,6 @@ import java.rmi.RemoteException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.roomreservation.common.CentralRepositoryUtils.lookupServer;
 import static com.roomreservation.common.ConsoleColours.*;
 
 public class StudentClient {
@@ -30,7 +30,7 @@ public class StudentClient {
         BufferedReader bufferedReader = new BufferedReader(is);
         try {
             identifier = getIdentifier(bufferedReader);
-            CentralRepository centralRepository = lookupServer(identifier.substring(0, 3), "rmi");
+            CentralRepository centralRepository = CentralRepositoryUtils.lookupServer(identifier.substring(0, 3), "rmi");
             if (centralRepository == null || !centralRepository.getStatus()){
                 System.out.println("Unable to lookup server with central repository");
                 System.exit(1);

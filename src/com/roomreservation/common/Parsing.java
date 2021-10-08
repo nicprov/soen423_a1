@@ -65,7 +65,7 @@ public class Parsing {
 
     public static String getBookingId(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter booking ID: ");
-        String bookingID = Parsing.tryParseUUID(bufferedReader.readLine());
+        String bookingID = Parsing.tryParseBookingId(bufferedReader.readLine());
         while (bookingID == null){
             System.out.print(ANSI_RED + "Invalid booking ID, must be a valid UUID (ie. a07002c2-ff53-4130-a831-e57ba864b751): " + RESET);
             bookingID = Parsing.tryParseUUID(bufferedReader.readLine());
@@ -125,6 +125,17 @@ public class Parsing {
         return null;
     }
 
+    public static String tryParseBookingId(String bookingId){
+        try{
+            String campus = bookingId.split(":")[0];
+            String uuid = bookingId.split(":")[1];
+            if (tryParseCampus(campus) != null && tryParseUUID(uuid) != null)
+                return bookingId;
+            return null;
+        } catch (Exception e){
+            return null;
+        }
+    }
     public static String tryParseUUID(String uuid){
         try {
             return UUID.fromString(uuid).toString();
