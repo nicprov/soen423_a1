@@ -15,7 +15,13 @@ public class RMIResponse implements Serializable {
     private String requestParameters;
     private boolean status;
 
-    public RMIResponse(){}
+    public RMIResponse(){
+        this.message = "";
+        this.datetime = new Date();
+        this.requestType = "";
+        this.requestParameters = "";
+        this.status = false;
+    }
 
     public String getMessage() {
         return message;

@@ -171,15 +171,15 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         RMIResponse kklTimeslots = udpTransfer(Campus.KKL, requestObject.build());
         RMIResponse wstTimeslots = udpTransfer(Campus.WST, requestObject.build());
         String message = "";
-        if (dvlTimeslots != null)
+        if (dvlTimeslots.getStatus())
             message += "DVL " + dvlTimeslots.getMessage() + " ";
         else
             message += "DVL (no response from server) ";
-        if (kklTimeslots != null)
+        if (kklTimeslots.getStatus())
             message += "KKL " + kklTimeslots.getMessage() + " ";
         else
             message += "KKL (no response from server) ";
-        if (wstTimeslots != null)
+        if (wstTimeslots.getStatus())
             message += "WST " + wstTimeslots.getMessage();
         else
             message += "WST (no response from server)";
@@ -282,11 +282,11 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                     RMIResponse wstBookingCount = udpTransfer(Campus.WST, requestBookingCount.build());
 
                     int totalBookingCount = 0;
-                    if (dvlBookingCount != null)
+                    if (dvlBookingCount.getStatus())
                         totalBookingCount += Integer.parseInt(dvlBookingCount.getMessage());
-                    if (kklBookingCount != null)
+                    if (kklBookingCount.getStatus())
                         totalBookingCount += Integer.parseInt(kklBookingCount.getMessage());
-                    if (wstBookingCount != null)
+                    if (wstBookingCount.getStatus())
                         totalBookingCount += Integer.parseInt(wstBookingCount.getMessage());
 
                     // Increase if total booking count < 3, increase
@@ -348,7 +348,7 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                             decreaseBookingCounter(identifier, datePosition.getElement().getKey());
 
                             // Cancel booking
-                            roomPosition.getElement().getValue().set(timeslotPosition, null);
+                            roomPosition.getElement().getValue().set(timeslotPosition, new Node<>(timeslotPosition.getElement().getKey(), null));
                         }
                     }
                 }
@@ -440,12 +440,10 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             if (datagramSocket != null)
                 datagramSocket.close();
         }
-        /*
         RMIResponse rmiResponse = new RMIResponse();
         rmiResponse.setStatus(false);
         rmiResponse.setMessage("Unable to connect to remote server");
-        return rmiResponse;*/
-        return null;
+        return rmiResponse;
     }
 
     private static byte[] trim(DatagramPacket packet) {
