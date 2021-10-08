@@ -67,7 +67,7 @@ public class Parsing {
         System.out.print("Enter booking ID: ");
         String bookingID = Parsing.tryParseBookingId(bufferedReader.readLine());
         while (bookingID == null){
-            System.out.print(ANSI_RED + "Invalid booking ID, must be a valid UUID (ie. a07002c2-ff53-4130-a831-e57ba864b751): " + RESET);
+            System.out.print(ANSI_RED + "Invalid booking ID, must be a valid UUID (ie. KKL:ce612356-db1f-4523-8c8b-c35bff35ebd0): " + RESET);
             bookingID = Parsing.tryParseUUID(bufferedReader.readLine());
         }
         return bookingID;

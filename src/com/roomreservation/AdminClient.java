@@ -121,11 +121,15 @@ public class AdminClient {
         try {
             RMIResponse response = roomReservation.createRoom(Parsing.getRoomNumber(bufferedReader),
                     Parsing.getDate(bufferedReader), Parsing.getTimeslots(bufferedReader));
-            if (response.getStatus())
-                System.out.println(ANSI_GREEN + response.getMessage() + RESET);
-            else
-                System.out.println(ANSI_RED + response.getMessage() + RESET);
-            Logger.log(logFilePath, response);
+            if (response != null) {
+                if (response.getStatus())
+                    System.out.println(ANSI_GREEN + response.getMessage() + RESET);
+                else
+                    System.out.println(ANSI_RED + response.getMessage() + RESET);
+                Logger.log(logFilePath, response);
+            } else {
+                System.out.println(ANSI_RED + "Unable to connect to remote server" + RESET);
+            }
         } catch (ConnectException e){
             System.out.println(ANSI_RED + "Unable to connect to remote server, retrying..." + RESET);
             Thread.sleep(1000);
@@ -142,11 +146,15 @@ public class AdminClient {
         try {
             RMIResponse response = roomReservation.deleteRoom(Parsing.getRoomNumber(bufferedReader),
                     Parsing.getDate(bufferedReader), Parsing.getTimeslots(bufferedReader));
-            if (response.getStatus())
-                System.out.println(ANSI_GREEN + response.getMessage() + RESET);
-            else
-                System.out.println(ANSI_RED + response.getMessage() + RESET);
-            Logger.log(logFilePath, response);
+            if (response != null) {
+                if (response.getStatus())
+                    System.out.println(ANSI_GREEN + response.getMessage() + RESET);
+                else
+                    System.out.println(ANSI_RED + response.getMessage() + RESET);
+                Logger.log(logFilePath, response);
+            } else {
+                System.out.println(ANSI_RED + "Unable to connect to remote server" + RESET);
+            }
         } catch (ConnectException e){
             System.out.println(ANSI_RED + "Unable to connect to remote server, retrying..." + RESET);
             Thread.sleep(1000);

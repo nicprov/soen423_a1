@@ -423,7 +423,11 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                 datagramSocket.receive(reply);
                 return new RMIResponse().fromResponseObject(ResponseObject.parseFrom(trim(reply)));
             } else {
-                System.out.println(ANSI_RED + "Unable to connect to the central repository" + RESET);
+                System.out.println(ANSI_RED + "Unable to get server details from the central repository" + RESET);
+                RMIResponse rmiResponse = new RMIResponse();
+                rmiResponse.setStatus(false);
+                rmiResponse.setMessage("Unable to get server details from the central repository");
+                return rmiResponse;
             }
         }
         catch (SocketException e){
@@ -436,6 +440,11 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             if (datagramSocket != null)
                 datagramSocket.close();
         }
+        /*
+        RMIResponse rmiResponse = new RMIResponse();
+        rmiResponse.setStatus(false);
+        rmiResponse.setMessage("Unable to connect to remote server");
+        return rmiResponse;*/
         return null;
     }
 
