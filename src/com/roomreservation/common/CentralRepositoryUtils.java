@@ -16,12 +16,23 @@ public class CentralRepositoryUtils {
     public static final String SERVER_HOST = "localhost";
     public static final String SERVER_PATH = "server";
 
+    /**
+     * Trims byte array to remove any 0 entries (or empty entries) so that the Protobuf can parse it properly
+     * @param packet Datagram Packet from the UDP server
+     * @return trimmed byte array
+     */
     public static byte[] trim(DatagramPacket packet) {
         byte[] data = new byte[packet.getLength()];
         System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
         return data;
     }
 
+    /**
+     * Performs a lookup request on the Central Repository
+     * @param campus Campus name (dvl, kkl, wst)
+     * @param type Server type (udp, rmi)
+     * @return central repository object
+     */
     public static CentralRepository lookupServer(String campus, String type){
         CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
         centralRepositoryRequest.setAction(CentralRepositoryAction.Lookup.toString());
@@ -30,6 +41,11 @@ public class CentralRepositoryUtils {
         return udpTransfer(centralRepositoryRequest.build());
     }
 
+    /**
+     * Performs a udp request to the central repository
+     * @param centralRepositoryRequest Central repository request object
+     * @return Central repository response object
+     */
     public static CentralRepository udpTransfer(CentralRepository centralRepositoryRequest){
         DatagramSocket datagramSocket = null;
         try {
@@ -55,6 +71,10 @@ public class CentralRepositoryUtils {
         return null;
     }
 
+    /**
+     * Performs udp request on the central repository
+     * @return available server port
+     */
     public static int getServerPort(){
         CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
         centralRepositoryRequest.setAction(CentralRepositoryAction.GetAvailablePort.toString());
@@ -66,6 +86,13 @@ public class CentralRepositoryUtils {
         return centralRepositoryResponse.getPort();
     }
 
+    /**
+     * Registers server with the central repository
+     * @param campus Campus name (dvl, kkl, wst)
+     * @param type Server type (udp, rmi)
+     * @param port Network port
+     * @return True if server was successfully registered, false otherwise
+     */
     public static boolean registerServer(String campus, String type, int port){
         CentralRepository.Builder centralRepositoryRequest = CentralRepository.newBuilder();
         centralRepositoryRequest.setAction(CentralRepositoryAction.Register.toString());

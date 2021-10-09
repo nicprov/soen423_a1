@@ -70,6 +70,12 @@ public class CentralRepositoryServer {
         }
     }
 
+    /**
+     * Thread method to processed incoming UDP request
+     * @param datagramSocket Datagram socket
+     * @param datagramPacket Datagram packet
+     * @throws IOException Exception
+     */
     private static void handleUDPRequest(DatagramSocket datagramSocket, DatagramPacket datagramPacket) throws IOException {
         // Decode request object
         CentralRepository requestCentralRepository = CentralRepository.parseFrom(trim(datagramPacket));
@@ -97,12 +103,22 @@ public class CentralRepositoryServer {
         datagramSocket.send(reply);
     }
 
+    /**
+     * Trims incoming packet to strip out 0s so that Protobuf can parse it
+     * @param packet Datagram packet
+     * @return Trimmed byte array
+     */
     private static byte[] trim(DatagramPacket packet) {
         byte[] data = new byte[packet.getLength()];
         System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
         return data;
     }
 
+    /**
+     * Processes add server action which adds item to the repository
+     * @param requestCentralRepository Central Repository Request object
+     * @return Central Repository Response object
+     */
     private static CentralRepository addServer(CentralRepository requestCentralRepository){
         CentralRepository.Builder responseCentralRepository = CentralRepository.newBuilder();
         boolean status = false;
@@ -131,6 +147,12 @@ public class CentralRepositoryServer {
         return responseCentralRepository.build();
     }
 
+    /**
+     * Processes lookup server action which checks returns server details for campus if it exists
+     * @param campus Campus name (dvl, kkl, wst)
+     * @param type Server type (rmi, udp)
+     * @return Central repository response object
+     */
     private static CentralRepository getServer(String campus, String type){
         CentralRepository.Builder responseCentralRepository = CentralRepository.newBuilder();
         boolean found = false;
@@ -161,6 +183,10 @@ public class CentralRepositoryServer {
         return responseCentralRepository.build();
     }
 
+    /**
+     * Processes get available port server action which dynamically allocates available ports
+     * @return Random available port
+     */
     private static CentralRepository getAvailablePort(){
         int randomPort = randomNumberGenerator();
         while (usedPorts.contains(randomPort) && !testPort(randomPort))
@@ -172,6 +198,11 @@ public class CentralRepositoryServer {
         return responseCentralRepository.build();
     }
 
+    /**
+     * Test to see if port is taken by another process
+     * @param port Port number
+     * @return True if port is free, False otherwise
+     */
     private static boolean testPort(int port){
         ServerSocket socket = null;
         DatagramSocket datagramSocket = null;
@@ -195,6 +226,10 @@ public class CentralRepositoryServer {
         return false;
     }
 
+    /**
+     * Generates a random port between the MIN_PORT and MAX_PORT
+     * @return Randomly generated port
+     */
     private static int randomNumberGenerator(){
         return new Random().nextInt(MAX_PORT-MIN_PORT) + MIN_PORT;
     }

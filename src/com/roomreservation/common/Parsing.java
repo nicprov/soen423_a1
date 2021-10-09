@@ -13,6 +13,12 @@ import static com.roomreservation.common.ConsoleColours.RESET;
 
 public class Parsing {
 
+    /**
+     * Prompts user to enter a list of timeslots
+     * @param bufferedReader Input buffer
+     * @return Array list with valid timeslots
+     * @throws IOException Exception
+     */
     public static ArrayList<String> getTimeslots(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter a list of timeslots (ie. 9:30-10:00, 11:15-11:30): ");
         ArrayList<String> timeslots = Parsing.tryParseTimeslotList(bufferedReader.readLine());
@@ -23,6 +29,12 @@ public class Parsing {
         return timeslots;
     }
 
+    /**
+     * Prompts user to enter a timeslot
+     * @param bufferedReader Input buffer
+     * @return Timeslot when it is validated
+     * @throws IOException Exception
+     */
     public static String getTimeslot(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter a timeslots (ie. 9:30-10:00): ");
         String timeslot = Parsing.tryParseTimeslot(bufferedReader.readLine());
@@ -33,6 +45,12 @@ public class Parsing {
         return timeslot;
     }
 
+    /**
+     * Prompts user to enter a date
+     * @param bufferedReader Input buffer
+     * @return Validated date
+     * @throws IOException Exception
+     */
     public static Date getDate(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter date (ie. 2021-01-01): ");
         Date date = Parsing.tryParseDate(bufferedReader.readLine());
@@ -43,6 +61,12 @@ public class Parsing {
         return date;
     }
 
+    /**
+     * Prompts user to enter a room number
+     * @param bufferedReader Input buffer
+     * @return Validated room number
+     * @throws IOException Exception
+     */
     public static int getRoomNumber(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter room number  (ie. 201): ");
         int roomNumber = Parsing.tryParseInt(bufferedReader.readLine());
@@ -53,6 +77,12 @@ public class Parsing {
         return roomNumber;
     }
 
+    /**
+     * Prompts user to enter a campus
+     * @param bufferedReader Input buffer
+     * @return Validated campus enum object
+     * @throws IOException Exception
+     */
     public static Campus getCampus(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter campus name (dvl, kkl, wst): ");
         Campus campus = Parsing.tryParseCampus(bufferedReader.readLine());
@@ -63,6 +93,12 @@ public class Parsing {
         return campus;
     }
 
+    /**
+     * Prompts user to enter booking id
+     * @param bufferedReader Input buffer
+     * @return Validated booking id
+     * @throws IOException Exception
+     */
     public static String getBookingId(BufferedReader bufferedReader) throws IOException {
         System.out.print("Enter booking ID: ");
         String bookingID = Parsing.tryParseBookingId(bufferedReader.readLine());
@@ -73,6 +109,11 @@ public class Parsing {
         return bookingID;
     }
 
+    /**
+     * Try's to part string to int
+     * @param value Integer as string
+     * @return Parsed int or -1
+     */
     public static int tryParseInt(String value){
         try {
             return Integer.parseInt(value);
@@ -81,6 +122,11 @@ public class Parsing {
         }
     }
 
+    /**
+     * Try's to parse date to proper format
+     * @param date Date as string
+     * @return Parsed date or null
+     */
     public static Date tryParseDate(String date){
         try {
             return new SimpleDateFormat("yyyy-MM-dd").parse(date);
@@ -89,6 +135,11 @@ public class Parsing {
         }
     }
 
+    /**
+     * Try's to parse list of timeslots
+     * @param list List of timeslots as string
+     * @return Arraylist of timeslots or null
+     */
     public static ArrayList<String> tryParseTimeslotList(String list){
         List<String> tempList = Arrays.asList(list.split("\\s*,\\s*"));
         if (tempList.size() == 0)
@@ -100,6 +151,11 @@ public class Parsing {
         return new ArrayList<>(tempList);
     }
 
+    /**
+     * Try's to parse timeslot
+     * @param timeslot Timeslot as string
+     * @return Validated timeslot
+     */
     public static String tryParseTimeslot(String timeslot){
         Pattern pattern = Pattern.compile("[0-9]{1,2}:[0-9]{2}-[0-9]{1,2}:[0-9]{2}$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(timeslot);
@@ -108,6 +164,11 @@ public class Parsing {
         return null;
     }
 
+    /**
+     * Try's to parse campus as Campus enum object
+     * @param campus Campus as tring
+     * @return Campus enum or null
+     */
     public static Campus tryParseCampus(String campus){
         Pattern pattern = Pattern.compile("(dvl|kkl|wst)$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(campus);
@@ -125,6 +186,11 @@ public class Parsing {
         return null;
     }
 
+    /**
+     * Try's to parse booking id
+     * @param bookingId Booking id as string
+     * @return Booking id or null
+     */
     public static String tryParseBookingId(String bookingId){
         try{
             String campus = bookingId.split(":")[0];
@@ -136,6 +202,12 @@ public class Parsing {
             return null;
         }
     }
+
+    /**
+     * Try's to parse uuid
+     * @param uuid UUID as string
+     * @return UUID or null
+     */
     public static String tryParseUUID(String uuid){
         try {
             return UUID.fromString(uuid).toString();

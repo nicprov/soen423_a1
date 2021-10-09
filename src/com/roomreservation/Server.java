@@ -41,6 +41,11 @@ public class Server {
         }
     }
 
+    /**
+     * Starts RMI server to start receiving RMI requests
+     * @param campus Campus name (dvl, wst, kkl)
+     * @throws IOException Exception
+     */
     private static void startRMIServer(Campus campus) throws IOException {
         String registryURL;
         roomReservation = new RoomReservation(campus);
@@ -69,6 +74,10 @@ public class Server {
         System.out.println("RMI Server ready (port: " + remotePort + ")");
     }
 
+    /**
+     * Starts UDP server to start accepting UDP requests
+     * @param campus Campus name (dvl, wst, kkl)
+     */
     private static void startUDPServer(Campus campus){
         DatagramSocket datagramSocket = null;
         try {
@@ -126,6 +135,13 @@ public class Server {
         }
     }
 
+    /**
+     * Thread method to handle incoming UDP request
+     * @param datagramSocket Datagram Socket
+     * @param datagramPacket Datagram Packet
+     * @throws IOException Exception
+     * @throws ParseException Exception
+     */
     private static void handleUDPRequest(DatagramSocket datagramSocket, DatagramPacket datagramPacket) throws IOException, ParseException {
         // Decode request object
         RequestObject requestObject = RequestObject.parseFrom(CentralRepositoryUtils.trim(datagramPacket));
@@ -175,6 +191,11 @@ public class Server {
         datagramSocket.send(reply);
     }
 
+    /**
+     * Parses campus name
+     * @param campus Campus name (dvl, wst, kkl)
+     * @return Campus enum
+     */
     private static Campus getCampus(String campus) {
         Pattern pattern = Pattern.compile("(dvl|kkl|wst)$", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(campus);
@@ -193,6 +214,10 @@ public class Server {
         }
     }
 
+    /**
+     * Prints welcome screen
+     * @param campus Campus name (dvl, wst, kkl)
+     */
     private static void printWelcome(Campus campus){
         System.out.println("==============================");
         System.out.println("Welcome to the " + campus.toString().toUpperCase() + " campus!");

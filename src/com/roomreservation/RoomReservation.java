@@ -15,8 +15,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.rmi.server.RemoteServer;
-import java.rmi.server.ServerNotActiveException;
 import java.rmi.server.UnicastRemoteObject;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -47,6 +45,14 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         this.generateSampleData();
     }
 
+    /**
+     * Create Room RMI method
+     * @param roomNumber Campus room number
+     * @param date Date
+     * @param listOfTimeSlots List of timeslots to add
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     @Override
     public synchronized RMIResponse createRoom(int roomNumber, Date date, ArrayList<String> listOfTimeSlots) throws IOException {
         Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> datePosition = findDate(date);
@@ -99,6 +105,14 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Delete room RMI method
+     * @param roomNumber Campus room number
+     * @param date Date
+     * @param listOfTimeSlots List of time slots to remove
+     * @return RMI Response object
+     * @throws IOException Exception
+     */
     @Override
     public synchronized RMIResponse deleteRoom(int roomNumber, Date date, ArrayList<String> listOfTimeSlots) throws IOException {
         Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> datePosition = findDate(date);
@@ -142,6 +156,16 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Book Room RMI method
+     * @param identifier User ID (ie. dvls1234)
+     * @param campus Campus name (dvl, wst, kkl)
+     * @param roomNumber Campus room number
+     * @param date Date
+     * @param timeslot Timeslot to book
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     @Override
     public synchronized RMIResponse bookRoom(String identifier, Campus campus, int roomNumber, Date date, String timeslot) throws IOException {
         if (campus.equals(this.campus))
@@ -159,6 +183,12 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         }
     }
 
+    /**
+     * Get available timeslot RMI method
+     * @param date Date
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     @Override
     public synchronized RMIResponse getAvailableTimeSlot(Date date) throws IOException {
         // Build new proto request object
@@ -195,6 +225,13 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Cancel booking RMI method
+     * @param identifier User ID (ie. dvls1234)
+     * @param bookingId Booking id
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     @Override
     public synchronized RMIResponse cancelBooking(String identifier, String bookingId) throws IOException {
         Campus campus = Campus.valueOf(bookingId.split(":")[0]);
@@ -210,6 +247,12 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         }
     }
 
+    /**
+     * Counts the number of available timeslots on a given day in the given campus
+     * @param date Date
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     public RMIResponse getAvailableTimeSlotOnCampus(Date date) throws IOException {
         int counter = 0;
         for (Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> dateNext : database.positions()) {
@@ -230,6 +273,13 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Counts the number of bookings on a specific date for a specific user
+     * @param identifier User ID (ie. dvls1234)
+     * @param date Date
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     public RMIResponse getBookingCount(String identifier, Date date) throws IOException {
         int counter = 0;
         LocalDate tempDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -255,6 +305,15 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Books room for a specific user in a specific room, on a specific day and timeslot
+     * @param identifier User ID (ie. dvls1234)
+     * @param roomNumber Room number
+     * @param date Date
+     * @param timeslot Timeslot
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     private RMIResponse bookRoomOnCampus(String identifier, int roomNumber, Date date, String timeslot) throws IOException {
         boolean isOverBookingCountLimit = false;
         boolean timeslotExist = false;
@@ -328,6 +387,13 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Cancels booking on campus for a specific user and booking id
+     * @param identifier User
+     * @param bookingId Booking id
+     * @return RMI response object
+     * @throws IOException Exception
+     */
     private RMIResponse cancelBookingOnCampus(String identifier, String bookingId) throws IOException {
         boolean bookingExist = false;
         boolean studentIdMatched = false;
@@ -372,6 +438,11 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Increase booking count for specific user on specific date
+     * @param identifier User ID (ie. dvls1234)
+     * @param date Date
+     */
     public void increaseBookingCounter(String identifier, Date date) {
         boolean foundIdentifier = false;
         boolean foundDate = false;
@@ -394,6 +465,11 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
             bookingCount.addFirst(new Node<>(identifier, new LinkedPositionalList<>(new Node<>(date, 1))));
     }
 
+    /**
+     * Decreases booking count for specific user on specific date
+     * @param identifier User ID (ie. dvls1234)
+     * @param date Date
+     */
     public void decreaseBookingCounter(String identifier, Date date) {
         for (Position<Entry<String, LinkedPositionalList<Entry<Date, Integer>>>> bookingIdentifier: bookingCount.positions()){
             if (bookingIdentifier.getElement().getKey().equals(identifier)) {
@@ -407,6 +483,12 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         }
     }
 
+    /**
+     * Performs a UDP request on a specific campus by first performing a looking with the central repository
+     * @param campus Campus name (dvl, wst, kkl)
+     * @param requestObject Request Object
+     * @return RMI response object
+     */
     private RMIResponse udpTransfer(Campus campus, RequestObject requestObject){
         DatagramSocket datagramSocket = null;
         try {
@@ -446,12 +528,22 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return rmiResponse;
     }
 
+    /**
+     * Trims byte array to strip 0s filling up unused elements
+     * @param packet Datagram packet
+     * @return Trimmed byte array
+     */
     private static byte[] trim(DatagramPacket packet) {
         byte[] data = new byte[packet.getLength()];
         System.arraycopy(packet.getData(), packet.getOffset(), data, 0, packet.getLength());
         return data;
     }
 
+    /**
+     * Searches database to find position at specific date
+     * @param date Date
+     * @return Date position in database
+     */
     private Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> findDate(Date date){
         for (Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> dateNext : database.positions()) {
             if (dateNext.getElement().getKey().equals(date))
@@ -460,6 +552,12 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return null;
     }
 
+    /**
+     * Searches database to find position at specific room number
+     * @param roomNumber Campus room number
+     * @param datePosition Date position object
+     * @return Room position in database
+     */
     private Position<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>> findRoom(int roomNumber, Position<Entry<Date, LinkedPositionalList<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>>>> datePosition){
         for (Position<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>> roomNext : datePosition.getElement().getValue().positions()) {
             if (roomNext.getElement().getKey().equals(roomNumber))
@@ -468,6 +566,12 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return null;
     }
 
+    /**
+     * Searches database to find position at specific timeslot
+     * @param timeslot Timeslot
+     * @param room Room position object
+     * @return Timeslot position in database
+     */
     private Position<Entry<String, LinkedPositionalList<Entry<String, String>>>> findTimeslot(String timeslot, Position<Entry<Integer, LinkedPositionalList<Entry<String, LinkedPositionalList<Entry<String, String>>>>>> room){
         for (Position<Entry<String, LinkedPositionalList<Entry<String, String>>>> timeslotNext : room.getElement().getValue().positions()) {
             if (timeslotNext.getElement().getKey().equals(timeslot))
@@ -476,6 +580,9 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
         return null;
     }
 
+    /**
+     * Generates sample data in campus
+     */
     private void generateSampleData(){
         try {
             this.createRoom(201, Parsing.tryParseDate("2021-01-01"), Parsing.tryParseTimeslotList("9:30-10:00"));

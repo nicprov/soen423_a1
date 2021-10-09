@@ -54,7 +54,7 @@ public class StudentClient {
      *
      * @param br BufferedReader for console output
      * @return Validated unique identifier
-     * @throws IOException
+     * @throws IOException Exception
      */
     private static String getIdentifier(BufferedReader br) throws IOException {
         System.out.print("Enter unique identifier: ");
@@ -73,6 +73,9 @@ public class StudentClient {
     /**
      * List possible actions based on identifierType (either student or admin) and prompts
      * user to select an action from his specific user role
+     * @param bufferedReader Input buffer
+     * @return Action to perform
+     * @throws IOException Exception
      */
     private static String listAndGetActions(BufferedReader bufferedReader) throws IOException {
         String action = "";
@@ -96,9 +99,9 @@ public class StudentClient {
     /**
      * Start student processing
      *
-     * @param roomReservation
-     * @param bufferedReader
-     * @throws IOException
+     * @param roomReservation Remote room reservation object
+     * @param bufferedReader Input buffer
+     * @throws IOException Exception
      */
     private static void startStudent(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws IOException, InterruptedException, NotBoundException {
         while (true) {
@@ -122,6 +125,15 @@ public class StudentClient {
         }
     }
 
+    /**
+     * Performs book room action and calls remote RMI server
+     * @param roomReservation Remote room reservation object
+     * @param bufferedReader Input buffer
+     * @throws InterruptedException Exception
+     * @throws MalformedURLException Exception
+     * @throws NotBoundException Exception
+     * @throws RemoteException Exception
+     */
     private static void bookRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws InterruptedException, MalformedURLException, NotBoundException, RemoteException {
         System.out.println("\nBOOK ROOM");
         System.out.println("-----------");
@@ -147,6 +159,15 @@ public class StudentClient {
         }
     }
 
+    /**
+     * Performs get available time slots action and calls remote RMI server
+     * @param roomReservation Remote room reservation object
+     * @param bufferedReader Input buffer
+     * @throws InterruptedException Exception
+     * @throws MalformedURLException Exception
+     * @throws NotBoundException Exception
+     * @throws RemoteException Exception
+     */
     private static void getAvailableTimeSlots(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws InterruptedException, MalformedURLException, NotBoundException, RemoteException {
         System.out.println("\nGET AVAILABLE TIME SLOTS");
         System.out.println("-----------");
@@ -171,6 +192,15 @@ public class StudentClient {
         }
     }
 
+    /**
+     * Performs cancel booking action and calls remote RMI server
+     * @param roomReservation Remote room reservation object
+     * @param bufferedReader Input buffer
+     * @throws InterruptedException Exception
+     * @throws MalformedURLException Exception
+     * @throws NotBoundException Exception
+     * @throws RemoteException Exception
+     */
     private static void cancelBooking(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws InterruptedException, MalformedURLException, NotBoundException, RemoteException {
         System.out.println("\nCANCEL BOOKING");
         System.out.println("-----------");

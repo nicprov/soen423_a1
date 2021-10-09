@@ -52,7 +52,7 @@ public class AdminClient {
      * followed by the user type (a for admin or s for student) followed by exactly four digits.
      * @param br BufferedReader for console output
      * @return Validated unique identifier
-     * @throws IOException
+     * @throws IOException Exception
      */
     private static String getIdentifier(BufferedReader br) throws IOException {
         System.out.print("Enter unique identifier: ");
@@ -71,6 +71,9 @@ public class AdminClient {
     /**
      * List possible actions based on identifierType (either student or admin) and prompts
      * user to select an action from his specific user role
+     * @param bufferedReader Input buffer
+     * @return Selected action
+     * @throws IOException Exception
      */
     private static String listAndGetActions(BufferedReader bufferedReader) throws IOException {
         String action = "";
@@ -92,9 +95,9 @@ public class AdminClient {
 
     /**
      * Start admin action processing
-     * @param roomReservation
-     * @param bufferedReader
-     * @throws IOException
+     * @param roomReservation RMI object
+     * @param bufferedReader Input buffer
+     * @throws IOException Exception
      */
     private static void startAdmin(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws IOException, NotBoundException, InterruptedException {
         while (true) {
@@ -115,6 +118,15 @@ public class AdminClient {
         }
     }
 
+    /**
+     * Calls remote createRoom method on server
+     * @param roomReservation RMI object
+     * @param bufferedReader Input buffer
+     * @throws RemoteException Exception
+     * @throws MalformedURLException Exception
+     * @throws NotBoundException Exception
+     * @throws InterruptedException Exception
+     */
     private static void createRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws RemoteException, MalformedURLException, NotBoundException, InterruptedException {
         System.out.println("\nCREATE ROOM");
         System.out.println("-----------");
@@ -140,6 +152,15 @@ public class AdminClient {
         }
     }
 
+    /**
+     * Calls remote deleteRoom method on server
+     * @param roomReservation RMI object
+     * @param bufferedReader Input buffer
+     * @throws RemoteException Exception
+     * @throws InterruptedException Exception
+     * @throws MalformedURLException Exception
+     * @throws NotBoundException Exception
+     */
     private static void deleteRoom(RoomReservationInterface roomReservation, BufferedReader bufferedReader) throws RemoteException, InterruptedException, MalformedURLException, NotBoundException {
         System.out.println("\nDELETE ROOM");
         System.out.println("-----------");
