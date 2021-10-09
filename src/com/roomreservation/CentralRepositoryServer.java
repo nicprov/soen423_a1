@@ -13,6 +13,7 @@ import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Random;
 
 import static com.roomreservation.common.ConsoleColours.ANSI_RED;
 import static com.roomreservation.common.ConsoleColours.RESET;
@@ -195,6 +196,6 @@ public class CentralRepositoryServer {
     }
 
     private static int randomNumberGenerator(){
-        return MIN_PORT + (int)(Math.random() * MAX_PORT);
+        return new Random().nextInt(MAX_PORT-MIN_PORT) + MIN_PORT;
     }
 }

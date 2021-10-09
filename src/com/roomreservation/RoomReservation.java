@@ -111,14 +111,14 @@ public class RoomReservation extends UnicastRemoteObject implements RoomReservat
                 for (String timeslot: listOfTimeSlots){
                     Position<Entry<String, LinkedPositionalList<Entry<String, String>>>> timeslotPosition = findTimeslot(timeslot, roomPosition);
                     if (timeslotPosition != null) {
-                        String identifier = "";
-                        for (Position<Entry<String, String>> timeslotPropertiesNext : timeslotPosition.getElement().getValue().positions()) {
-                            if (timeslotPropertiesNext.getElement().getValue().equals("studentId")){
-                                identifier = timeslotPropertiesNext.getElement().getValue();
+                        if (timeslotPosition.getElement().getValue() != null) {
+                            for (Position<Entry<String, String>> timeslotPropertiesNext : timeslotPosition.getElement().getValue().positions()) {
+                                if (timeslotPropertiesNext.getElement().getValue().equals("studentId")) {
+                                    // Reduce booking count for student
+                                    decreaseBookingCounter(timeslotPropertiesNext.getElement().getValue(), datePosition.getElement().getKey());
+                                }
                             }
                         }
-                        // Reduce booking count for student
-                        decreaseBookingCounter(identifier, datePosition.getElement().getKey());
 
                         // Timeslot exists, so delete it
                         roomPosition.getElement().getValue().remove(timeslotPosition);
